@@ -1,3 +1,18 @@
+html,
+body,
+#root {
+  width: 100%;
+ 
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f5f7;
+  min-height: 100vh;
+  margin: 0;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
