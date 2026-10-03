@@ -1,0 +1,159 @@
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #ffffff;
+}
+
+/* ------------------------ SIDEBAR ----------------------- */
+.sidebar {
+  width: 150px;
+  flex-shrink: 0;
+  background-color: #f4f5f7;
+  border-right: 1px solid #e3e6ea;
+  padding: 1.2rem 0.8rem;
+}
+
+.sidebar .brand {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 1.3rem;
+  padding-left: 0.4rem;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sidebar nav a {
+  text-decoration: none;
+  color: #5c6470;
+  padding: 0.45rem 0.55rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
+}
+
+.sidebar nav a.active {
+  background-color: #eaf0fe;
+  color: #2f6fed;
+  font-weight: 600;
+}
+/* ------------------------ MAIN CONTENT ----------------------- */
+.main-content {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  padding: 1.3rem 1.8rem;
+}
+/* ------------------------ TOPBAR ----------------------- */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.topbar h1 {
+  font-size: 1.4rem;
+}
+
+.role-badge {
+  background-color: #e8f8ef;
+  color: #1a9c5c;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+}
+/* ------------------------ STATISTICS ----------------------- */
+.stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 1.5em;
+  
+}
+
+.stat-card {
+  background-color: #f4f5f7;
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  width: 100%;
+}
+
+.stat-card b {
+  display: block;
+  font-size: 1.1rem;
+  text-align: left;
+}
+
+.stat-card span {
+  font-size: 0.75rem;
+  color: #5c6470;
+  text-align: left;
+  display: block;
+}
+
+/* ------------------------ ACTIVITY TABLE ----------------------- */
+.activity-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.activity-table th,
+.activity-table td {
+  text-align: left;
+  padding: 0.6rem 0.4rem;
+  border-bottom: 1px solid #e3e6ea;
+}
+
+.activity-table th {
+  color: #5c6470;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+/* ------------------------ STATUS PILL ----------------------- */
+
+.pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.pill-ok {
+  background-color: #e8f8ef;
+  color: #1a9c5c;
+}
+
+.pill-warn {
+  background-color: #fcf1de;
+  color: #c77d10;
+}
+/* ------------------------ MOBILE ----------------------- */
+@media (max-width: 768px) {
+.dashboard-wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e3e6ea;
+  }
+.sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .main-content {
+    padding: 1rem;
+  }
+}

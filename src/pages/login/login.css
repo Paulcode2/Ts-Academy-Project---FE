@@ -1,0 +1,184 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f5f7;
+ margin: 0;
+ 
+}
+
+.login-container {
+  background-color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 40px;
+  justify-content: center;
+ margin: 40px auto;
+ border-radius: 12px;
+ box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);;
+  width: 90%;
+  max-width: 650px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+ 
+}
+
+.login-container h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.login-container label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.login-container input ,
+    .login-container select {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   SIGN IN / SIGN UP TABS
+   ========================= */
+
+.auth-tabs {
+    display: flex;
+    width: 100%;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ccc;
+}
+
+.auth-tabs button {
+    flex: 1;
+    width: 50%;
+    padding: 12px 10px;
+
+    /* Override the normal button styling */
+    background-color: transparent;
+    color: #555;
+    border: none;
+    border-radius: 0;
+
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Active tab */
+.auth-tabs button.active {
+    color: #1f4d45;
+    border-bottom: 3px solid #1f4d45;
+    font-weight: bold;
+}
+
+/* Hovering over tabs */
+.auth-tabs button:hover {
+    background-color: transparent;
+    color: #1f4d45;
+}
+
+/* =========================
+   MAIN SUBMIT BUTTON
+   ========================= */
+
+.submit-button {
+  width: 100%;
+  padding: 0.7rem;
+  background-color: #2f6fed;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #2558c4;
+}
+
+/* =========================
+   ERROR MESSAGE
+   ========================= */
+
+
+.error {
+  color: #d1373f;
+  font-size: 0.8rem;
+  margin-top: 0.8rem;
+  text-align: center;
+}
+
+/*  =========================
+        DESKTOP VERSION
+   ========================= */
+   @media (min-width: 768px) {
+    .login-container {
+        width: 90%;
+        padding:50px;
+        min-height: 80vh;
+    }
+
+    #loginForm {
+        width: 100%;
+        max-width: 500px;
+    
+    }
+    .login-container h1 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .login-container input,
+    .login-container select {
+        padding: 0.9rem;
+        font-size: 1rem;
+    }
+
+    .submit-button {
+        padding: 0.9rem;
+        font-size: 1rem;
+    }
+
+    /* =========================
+       MOBILE VERSION
+      ========================= */
+    @media (max-width: 767px) {
+        .login-container {
+            width: 92%;
+            padding: 2rem;
+        }
+
+        .login-container h1 {
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .login-container input,
+        .login-container select {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .submit-button {
+            padding: 0.6rem;
+            font-size: 0.9rem;
+        }
+    }
+}
