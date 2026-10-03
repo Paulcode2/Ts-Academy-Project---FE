@@ -53,14 +53,14 @@ export default function Dashboard() {
    <tbody>
     <tr>
       <td>Stock-in</td>
-      <td>Coca-Cola 50cl</td>
+      <td>GOSLO-CHOCOLATE-ALMOND-320ML</td>
       <td>+120</td>
       <td><span className="pill pill-ok">Done</span></td>
     </tr>
     <tr>
       <td>Transfer</td>
-      <td>Bag of Rice 50kg</td>
-      <td>40</td>
+      <td>FANICE-VANILLA-3L</td>
+      <td>15</td>
       <td><span className="pill pill-warn">Pending</span></td>
     </tr>
   </tbody>

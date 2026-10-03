@@ -9,6 +9,27 @@ export default function Warehouse() {
     ]);
 const [showForm, setShowForm] = useState(false)
 
+const [code, setCode] = useState('')
+const [name, setName] = useState('')
+const [locations, setLocations] = useState('')
+const [status, setStatus] = useState('Active')
+
+const handleSaveWarehouse = () => {
+    const newWarehouse = {
+        code: code,
+        name: name,
+        locations: Number(locations),
+        status: status
+    }
+
+    setWarehouses([...warehouses, newWarehouse])
+
+    setCode('')
+    setName('')
+    setLocations('')
+    setStatus('Active')
+    setShowForm(false)
+}
     return(
         <div className="dashboard-wrapper">
             {/* |Sidebar - same as dashboard,just "warehouses" is active| */}
@@ -26,7 +47,7 @@ const [showForm, setShowForm] = useState(false)
             <main className="main-content">
                 <div className="topbar">
                     <h1> Warehouses</h1>
-                    <button className="add-warehouse-btn"    onClick={() => setShowForm(true)}>+ Add warehouse</button>
+                    <button className="add-warehouse-btn"    onClick={() => setShowForm(true)}>+ Add Warehouse</button>
                 </div>
                 {showForm && (
     <div className="warehouse-form">
@@ -35,27 +56,46 @@ const [showForm, setShowForm] = useState(false)
         <input
             type="text"
             placeholder="Warehouse code"
+            name="code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}   
+            required
         />
 
         <input
             type="text"
             placeholder="Warehouse name"
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}           
+            required
         />
 
         <input
             type="number"
             placeholder="Number of locations"
+            name="locations"
+            value={locations}
+            onChange={(e) => setLocations(e.target.value)}  
+            min="0"
+            required
         />
 
-        <select>
+        <select
+            name="status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+        >
             <option value="Active">Active</option>
             <option value="Maintenance">Maintenance</option>
             <option value="Inactive">Inactive</option>
         </select>
 
-        <button>Save Warehouse</button>
+        <button type="submit" onClick={handleSaveWarehouse}>
+            Save Warehouse
+        </button>
 
-        <button onClick={() => setShowForm(false)}>
+        <button type="button" onClick={() => setShowForm(false)}>
             Cancel
         </button>
     </div>
@@ -70,28 +110,27 @@ const [showForm, setShowForm] = useState(false)
                         </tr>
                     </thead>
                     <tbody>
-                        {warehouses.map((warehouses) => (
-                            <tr key={warehouses.code}>
-                                <td>{warehouses.code}</td>
-                                <td>{warehouses.name}</td>
-                                <td>{warehouses.locations}</td>
-                                <td><span className={
-                                    warehouses.status === 'Active' ? 'pill pill-ok' : 
-                                    warehouses.status === 'Maintenance' ? 'pill pill-warn' : 'pill pill-danger'
-                                }>
-                                    {warehouses.status}
-                                </span></td>
+                        {warehouses.map((warehouse) => (
+                            <tr key={warehouse.code}>
+                                <td>{warehouse.code}</td>
+                                <td>{warehouse.name}</td>
+                                <td>{warehouse.locations}</td>
+                                <td>
+                                    <span
+                                        className={
+                                            warehouse.status === 'Active'
+                                                ? 'pill pill-ok'
+                                                : warehouse.status === 'Maintenance'
+                                                    ? 'pill pill-warn'
+                                                    : 'pill pill-danger'
+                                        }
+                                    >
+                                        {warehouse.status}
+                                    </span>
+                                </td>
                             </tr>
                         ))}
                         
-                        <td>
-                            <span className= {
-                                warehouses.status === 'Active' ? 'pill pill-ok' : 
-                                warehouses.status === 'Maintenance' ? 'pill pill-warn' : 'pill pill-danger'
-                            }>
-                                {warehouses.status}
-                            </span>
-                        </td>
                     </tbody>
                 </table>
             </main>

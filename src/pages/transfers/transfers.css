@@ -1,0 +1,12 @@
+@import url('../dashboard/dashboard.css');
+
+.btn-primary {
+    background-color: #2f6fed;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}

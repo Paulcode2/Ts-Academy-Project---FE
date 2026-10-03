@@ -1,0 +1,87 @@
+@import url('../dashboard/dashboard.css');
+
+.invite-user-btn {
+    background-color: #2f6fed;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.invite-user-btn:hover {
+   opacity: 0.9;
+}   
+.pill-danger {
+    background-color: #fbe9ea;
+    color: #d1373f;
+  
+}
+.invite-user-btn {
+    background-color: #2f6fed;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.invite-user-btn:hover {
+  background-color: #255dcc;
+
+}
+/*--------- INVITE USER FORM ---------*/
+.invite-user-form {
+  
+    background-color: #ffffff;
+    border: 1px solid #e3e6ea;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    width: 500px;
+    box-sizing: border-box;
+}
+
+.invite-user-form h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.1rem;
+}
+
+.invite-user-form input,
+.invite-user-form select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #d5d9df;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    background-color: #ffffff;
+}
+.invite-user-form input:focus,
+.invite-user-form select:focus {
+    outline: none;
+    border-color: #2f6fed;
+
+}
+
+.invite-user-form button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.invite-user-form button[type="submit"] {
+    background-color: #2f6fed;
+    color: #fff;
+}
+.invite-user-form button[type="button"] {
+    background-color: #e3e6ea;
+    color: #333;
+}
