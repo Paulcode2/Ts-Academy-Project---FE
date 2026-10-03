@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PRODUCT</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+  </head>
+  <body>
+    <main class="product-page">
+      <aside class="product-sidebar">
+        <nav aria-label="Main navigation">
+          <ul class="navlist">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="inventory.html">Inventory</a></li>
+            <li><a href="#">Products</a></li>
+            <li>
+              <a href="#" aria-current="page">Transfers</a>
+            </li>
+            <li><a href="#">Warehouses</a></li>
+            <li><a href="#">Users</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <section class="product-content" aria-labelledby="transfers-title">
+        <header class="transfer-heading">
+          <div>
+            <h1 id="transfers-title">Pending Transfers</h1>
+            <p>Review and manage stock transfer requests.</p>
+          </div>
+          <span class="transfer-count">2 pending</span>
+        </header>
+
+        <div class="transfer-table-wrap">
+          <table class="transfer-table">
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Qty</th>
+                <th scope="col">From → To</th>
+                <th scope="col">Requested by</th>
+                <th scope="col"><span class="visually-hidden">Action</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>FANVANILLA</td>
+                <td>40</td>
+                <td>Shelf A1 → Shelf C3</td>
+                <td>B. Adewale</td>
+                <td class="transfer-actions">
+                  <button class="approve-button" type="button">Approve</button>
+                </td>
+              </tr>
+              <tr>
+                <td>SUPERYOGO-PLAIN</td>
+                <td>15</td>
+                <td>Cold Store → Shelf B2</td>
+                <td>F. Ibrahim</td>
+                <td class="transfer-actions">
+                  <button class="review-button" type="button">Review</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="/script.js"></script>
+  </body>
+</html>

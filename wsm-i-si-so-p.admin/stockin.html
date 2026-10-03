@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>STOCK-IN</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+  </head>
+  <body>
+    <section class="stk-in" aria-labelledby="stockin-title">
+      <h1 id="stockin-title" class="stk-in-title">Stock In — Vanilla 70ML</h1>
+
+      <div class="stk-in-layout">
+        <aside class="sidebar">
+          <h2 class="wms">W-M-S</h2>
+          <nav aria-label="Main navigation">
+            <ul class="navlist">
+              <li><a href="#">Dashboard</a></li>
+              <li><a href="#">Inventory</a></li>
+              <li><a href="#">Products</a></li>
+              <li><a href="#">Transfers</a></li>
+              <li><a href="#">Warehouses</a></li>
+              <li><a href="#">Users</a></li>
+            </ul>
+          </nav>
+        </aside>
+
+        <main class="stk-in-form">
+          <h2>Stock In Form</h2>
+
+          <form action="product.html" method="post">
+            <div class="form-field">
+              <label for="location">Location</label>
+              <input
+                id="location"
+                name="location"
+                type="text"
+                value="Shelf B1 (420 available)"
+                readonly
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="quantity">Quantity</label>
+              <input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min="1"
+                required
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="reason">Reason</label>
+              <input id="reason" name="reason" type="text" required />
+            </div>
+
+            <div class="form-field">
+              <label for="status">Status</label>
+              <select id="status" name="status" required>
+                <option value="" disabled selected>Select status</option>
+                <option value="damaged">Damaged</option>
+                <option value="expired">Expired</option>
+                <option value="lost">Lost</option>
+                <option value="sold">Sold</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <button type="submit">Confirm stock-in</button>
+          </form>
+        </main>
+      </div>
+    </section>
+  </body>
+</html>
