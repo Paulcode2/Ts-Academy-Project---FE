@@ -403,6 +403,24 @@ tbody tr:last-child td {
   margin: 0;
 }
 
+.inventory-message,
+.form-feedback {
+  margin-bottom: 16px;
+  color: #159b5b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-feedback-error {
+  color: #dd4248;
+}
+
+.inventory-no-results td {
+  padding: 18px 10px;
+  color: #777f89;
+  text-align: center;
+}
+
 /* STOCK-OUT FORM */
 .stk-out {
   width: 100%;
