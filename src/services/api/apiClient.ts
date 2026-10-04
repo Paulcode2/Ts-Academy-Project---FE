@@ -5,6 +5,14 @@ export interface ApiRequestOptions {
   credentials?: RequestCredentials;
   headers?: HeadersInit;
   signal?: AbortSignal;
+  skipAuthRefresh?: boolean;
+}
+
+export interface ApiAuthHandlers {
+  getAccessToken(): string | undefined;
+  getSessionVersion(): number;
+  refreshAccessToken(): Promise<string>;
+  onSessionExpired(): void;
 }
 
 interface ApiErrorPayload extends ApiErrorResponse {
@@ -64,19 +72,45 @@ export class ApiError extends Error {
   }
 }
 
+export function isForbiddenApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 403;
+}
+
+let authHandlers: ApiAuthHandlers | undefined;
+let refreshInFlight: Promise<string> | undefined;
+
+export function configureApiAuth(handlers?: ApiAuthHandlers): void {
+  authHandlers = handlers;
+}
+
+function refreshAccessToken(): Promise<string> {
+  if (!authHandlers) {
+    return Promise.reject(new Error("API authentication is not configured."));
+  }
+  if (!refreshInFlight) {
+    refreshInFlight = authHandlers.refreshAccessToken().finally(() => {
+      refreshInFlight = undefined;
+    });
+  }
+  return refreshInFlight;
+}
+
 async function request<T>(
   method: "GET" | "POST" | "PATCH",
   path: string,
   body?: unknown,
   options: ApiRequestOptions = {},
+  hasRetriedAfterRefresh = false,
 ): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   if (body !== undefined) {
     headers.set("Content-Type", "application/json");
   }
-  if (options.accessToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${options.accessToken}`);
+  const requestToken = options.accessToken ?? authHandlers?.getAccessToken();
+  const requestSessionVersion = authHandlers?.getSessionVersion();
+  if (requestToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${requestToken}`);
   }
 
   const url = `${getApiBaseUrl()}/${path.replace(/^\/+/, "")}`;
@@ -103,14 +137,60 @@ async function request<T>(
     try {
       payload = JSON.parse(responseText);
     } catch {
-      throw new ApiError(
-        response.ok
-          ? "The API returned an invalid JSON response."
-          : (STATUS_MESSAGES[response.status] ??
-              `Request failed with status ${response.status}.`),
-        response.status,
-      );
+      if (response.status === 401) {
+        payload = undefined;
+      } else {
+        throw new ApiError(
+          response.ok
+            ? "The API returned an invalid JSON response."
+            : (STATUS_MESSAGES[response.status] ??
+                `Request failed with status ${response.status}.`),
+          response.status,
+        );
+      }
     }
+  }
+
+  if (
+    response.status === 401 &&
+    !options.skipAuthRefresh &&
+    !hasRetriedAfterRefresh &&
+    requestToken &&
+    authHandlers
+  ) {
+    const currentToken = authHandlers.getAccessToken();
+    const isSameSession =
+      requestSessionVersion === authHandlers.getSessionVersion();
+    if (isSameSession && currentToken && requestToken !== currentToken) {
+      return request<T>(
+        method,
+        path,
+        body,
+        { ...options, accessToken: undefined },
+        true,
+      );
+    } else if (isSameSession && currentToken === requestToken) {
+      try {
+        await refreshAccessToken();
+        return request<T>(
+          method,
+          path,
+          body,
+          { ...options, accessToken: undefined },
+          true,
+        );
+      } catch {
+        authHandlers.onSessionExpired();
+      }
+    }
+  } else if (
+    response.status === 401 &&
+    hasRetriedAfterRefresh &&
+    requestToken &&
+    requestSessionVersion === authHandlers?.getSessionVersion() &&
+    authHandlers?.getAccessToken() === requestToken
+  ) {
+    authHandlers.onSessionExpired();
   }
 
   if (!response.ok || isApiErrorPayload(payload)) {
