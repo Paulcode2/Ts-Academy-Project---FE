@@ -1,0 +1,121 @@
+.master-data-filters,
+.master-data-pagination,
+.master-data-actions,
+.master-data-row-actions,
+.master-data-form-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.master-data-filters {
+  margin: 0 0 1rem;
+}
+
+.master-data-filters input,
+.master-data-filters select,
+.master-data-field input,
+.master-data-field select,
+.master-data-field textarea {
+  box-sizing: border-box;
+  min-height: 2.35rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #d9dde3;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+}
+
+.master-data-filters input {
+  flex: 1 1 12rem;
+}
+
+.master-data-filters select {
+  flex: 0 1 auto;
+}
+
+.master-data-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #333;
+  font-size: 0.85rem;
+}
+
+.master-data-field textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.master-data-error {
+  margin: 0.5rem 0;
+  color: #b42318;
+}
+
+.master-data-actions button,
+.master-data-pagination button,
+.master-data-row-actions button,
+.master-data-form-heading button,
+.master-data-details + button {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d9dde3;
+  border-radius: 5px;
+  background: #fff;
+  color: #303846;
+  cursor: pointer;
+}
+
+.master-data-actions button[type="submit"] {
+  border-color: #2f6fed;
+  background: #2f6fed;
+  color: #fff;
+}
+
+.master-data-actions button:disabled,
+.master-data-pagination button:disabled,
+.master-data-row-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.master-data-pagination {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.master-data-pagination span {
+  margin-right: auto;
+  color: #5c6470;
+  font-size: 0.85rem;
+}
+
+.master-data-form-heading {
+  justify-content: space-between;
+}
+
+.master-data-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.7rem 1rem;
+}
+
+.master-data-details dt {
+  color: #5c6470;
+  font-size: 0.75rem;
+}
+
+.master-data-details dd {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.master-data-row-actions {
+  gap: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .master-data-filters > * {
+    flex: 1 1 100%;
+  }
+}

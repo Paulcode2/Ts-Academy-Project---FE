@@ -1,4 +1,8 @@
-import type { ApiErrorResponse, ApiSuccessResponse } from "../../types/api";
+import type {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  PaginatedResponse,
+} from "../../types/api";
 
 export interface ApiRequestOptions {
   accessToken?: string;
@@ -6,6 +10,7 @@ export interface ApiRequestOptions {
   headers?: HeadersInit;
   signal?: AbortSignal;
   skipAuthRefresh?: boolean;
+  preserveResponse?: boolean;
 }
 
 export interface ApiAuthHandlers {
@@ -205,7 +210,7 @@ async function request<T>(
   }
 
   if (isApiSuccessPayload<T>(payload)) {
-    return payload.data;
+    return (options.preserveResponse ? payload : payload.data) as T;
   }
   return payload as T;
 }
@@ -213,6 +218,15 @@ async function request<T>(
 export const apiClient = {
   get<T>(path: string, options?: ApiRequestOptions): Promise<T> {
     return request<T>("GET", path, undefined, options);
+  },
+  getPaginated<T>(
+    path: string,
+    options?: ApiRequestOptions,
+  ): Promise<PaginatedResponse<T>> {
+    return request<PaginatedResponse<T>>("GET", path, undefined, {
+      ...options,
+      preserveResponse: true,
+    });
   },
   post<T>(
     path: string,

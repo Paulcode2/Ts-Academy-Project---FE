@@ -4,6 +4,12 @@ export type Permission =
   | "dashboard:read"
   | "warehouses:read"
   | "warehouses:manage"
+  | "locations:read"
+  | "locations:manage"
+  | "categories:read"
+  | "categories:manage"
+  | "products:read"
+  | "products:manage"
   | "transfers:read"
   | "transfers:request"
   | "transfers:review"
@@ -15,6 +21,12 @@ const rolePermissions: Record<AuthRole, ReadonlySet<Permission>> = {
     "dashboard:read",
     "warehouses:read",
     "warehouses:manage",
+    "locations:read",
+    "locations:manage",
+    "categories:read",
+    "categories:manage",
+    "products:read",
+    "products:manage",
     "transfers:read",
     "transfers:request",
     "transfers:review",
@@ -24,6 +36,12 @@ const rolePermissions: Record<AuthRole, ReadonlySet<Permission>> = {
   MANAGER: new Set([
     "dashboard:read",
     "warehouses:read",
+    "locations:read",
+    "locations:manage",
+    "categories:read",
+    "categories:manage",
+    "products:read",
+    "products:manage",
     "transfers:read",
     "transfers:request",
     "transfers:review",
@@ -31,6 +49,9 @@ const rolePermissions: Record<AuthRole, ReadonlySet<Permission>> = {
   STAFF: new Set([
     "dashboard:read",
     "warehouses:read",
+    "locations:read",
+    "categories:read",
+    "products:read",
     "transfers:read",
     "transfers:request",
     "transfers:cancel-own",

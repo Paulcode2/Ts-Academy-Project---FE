@@ -6,6 +6,9 @@ import Warehouse from "./pages/Warehouses/warehouse";
 import Transfers from "./pages/transfers/transfers";
 import Users from "./pages/users/users";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import Locations from "./pages/locations/locations";
+import Categories from "./pages/categories/categories";
+import Products from "./pages/products/products";
 
 function App() {
   return (
@@ -17,6 +20,30 @@ function App() {
         element={
           <ProtectedRoute>
             <Warehouse />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/locations"
+        element={
+          <ProtectedRoute>
+            <Locations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <Categories />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute>
+            <Products />
           </ProtectedRoute>
         }
       />

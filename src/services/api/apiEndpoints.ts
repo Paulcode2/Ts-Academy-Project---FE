@@ -7,4 +7,13 @@ export const API_ENDPOINTS = {
     me: "/auth/me",
     changePassword: "/auth/change-password",
   },
+  masterData: {
+    warehouses: "/warehouses",
+    locations: "/locations",
+    categories: "/categories",
+    products: "/products",
+  },
+  users: {
+    list: "/users",
+  },
 } as const;
