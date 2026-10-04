@@ -72,6 +72,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isForbiddenApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 403;
+}
+
 let authHandlers: ApiAuthHandlers | undefined;
 let refreshInFlight: Promise<string> | undefined;
 
