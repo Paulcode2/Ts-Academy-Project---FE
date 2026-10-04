@@ -10,6 +10,9 @@ const navigationItems = [
   { to: "/dashboard", label: "Dashboard", permission: "dashboard:read" },
   { to: "/transfers", label: "Transfers", permission: "transfers:read" },
   { to: "/warehouses", label: "Warehouses", permission: "warehouses:read" },
+  { to: "/locations", label: "Locations", permission: "locations:read" },
+  { to: "/categories", label: "Categories", permission: "categories:read" },
+  { to: "/products", label: "Products", permission: "products:read" },
   { to: "/users", label: "Users", permission: "users:manage" },
 ] as const;
 
