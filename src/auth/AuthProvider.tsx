@@ -82,8 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       getSessionVersion: () => sessionVersionRef.current,
       refreshAccessToken: async () => {
         const response = await refreshSession();
-        const user =
-          response.user ?? (await getCurrentUser(response.accessToken, true));
+        const user = await getCurrentUser(response.accessToken, true);
         saveSession(
           response.accessToken,
           user,
@@ -105,8 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const response = await refreshSession();
-        const user =
-          response.user ?? (await getCurrentUser(response.accessToken, true));
+        const user = await getCurrentUser(response.accessToken, true);
         saveSession(
           response.accessToken,
           user,
