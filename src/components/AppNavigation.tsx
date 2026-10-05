@@ -8,6 +8,7 @@ interface AppNavigationProps {
 
 const navigationItems = [
   { to: "/dashboard", label: "Dashboard", permission: "dashboard:read" },
+  { to: "/reports", label: "Reports", permission: "dashboard:read" },
   { to: "/transfers", label: "Transfers", permission: "transfers:read" },
   { to: "/warehouses", label: "Warehouses", permission: "warehouses:read" },
   { to: "/locations", label: "Locations", permission: "locations:read" },
@@ -51,7 +52,9 @@ export default function AppNavigation({
                   (item.to === "/stock-operations" &&
                     location.pathname.startsWith("/stock-operations")) ||
                   (item.to === "/stock-movements" &&
-                    location.pathname.startsWith("/stock-movements"))) &&
+                    location.pathname.startsWith("/stock-movements")) ||
+                  (item.to === "/reports" &&
+                    location.pathname.startsWith("/reports"))) &&
                 activePath === item.to
                   ? "active"
                   : undefined

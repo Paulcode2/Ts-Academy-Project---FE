@@ -30,6 +30,13 @@ export const API_ENDPOINTS = {
   dashboard: {
     summary: "/dashboard/summary",
   },
+  reports: {
+    inventory: "/reports/inventory",
+    warehouseInventory: "/reports/warehouse-inventory",
+    lowStock: "/reports/low-stock",
+    stockMovements: "/reports/stock-movements",
+    transfers: "/reports/transfers",
+  },
   users: {
     list: "/users",
   },
