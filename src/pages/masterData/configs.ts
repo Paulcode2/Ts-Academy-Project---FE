@@ -19,6 +19,25 @@ import type {
   WarehouseRecord,
 } from "../../types/masterData";
 
+function friendlyEnum(value: string): string {
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+const productUnitLabels: Record<(typeof PRODUCT_UNITS)[number], string> = {
+  EA: "Each",
+  BOX: "Box",
+  CASE: "Case",
+  PALLET: "Pallet",
+  KG: "Kilogram",
+  L: "Litre",
+  SET: "Set",
+  BUNDLE: "Bundle",
+};
+
 export const warehousePageConfig: MasterDataPageConfig<
   WarehouseRecord,
   WarehouseInput
@@ -33,7 +52,16 @@ export const warehousePageConfig: MasterDataPageConfig<
     { label: "Name", value: (record) => record.name },
     {
       label: "Location",
-      value: (record) => `${record.address.city}, ${record.address.state}`,
+      value: (record) =>
+        [
+          record.address.street,
+          record.address.city,
+          record.address.state,
+          record.address.postalCode,
+          record.address.country,
+        ]
+          .filter(Boolean)
+          .join(", "),
     },
     {
       label: "Manager",
@@ -142,7 +170,7 @@ export const locationPageConfig: MasterDataPageConfig<
     { label: "Name", value: (record) => record.name },
     { label: "Code", value: (record) => record.code },
     { label: "Warehouse ID", value: (record) => record.warehouse },
-    { label: "Type", value: (record) => record.type },
+    { label: "Type", value: (record) => friendlyEnum(record.type) },
   ],
   fields: [
     { name: "name", label: "Name", required: true },
@@ -159,7 +187,10 @@ export const locationPageConfig: MasterDataPageConfig<
       label: "Type",
       type: "select",
       required: true,
-      options: LOCATION_TYPES.map((type) => ({ value: type, label: type })),
+      options: LOCATION_TYPES.map((type) => ({
+        value: type,
+        label: friendlyEnum(type),
+      })),
     },
     { name: "description", label: "Description", type: "textarea" },
   ],
@@ -174,7 +205,10 @@ export const locationPageConfig: MasterDataPageConfig<
       name: "type",
       label: "Location type",
       type: "select",
-      options: LOCATION_TYPES.map((type) => ({ value: type, label: type })),
+      options: LOCATION_TYPES.map((type) => ({
+        value: type,
+        label: friendlyEnum(type),
+      })),
     },
   ],
   initialValues: {
@@ -245,7 +279,7 @@ export const productPageConfig: MasterDataPageConfig<
     { label: "Name", value: (record) => record.name },
     { label: "SKU", value: (record) => record.sku },
     { label: "Category ID", value: (record) => record.category },
-    { label: "Unit", value: (record) => record.unit },
+    { label: "Unit", value: (record) => productUnitLabels[record.unit] },
     {
       label: "Minimum stock",
       value: (record) => String(record.minimumStockLevel),
@@ -266,7 +300,10 @@ export const productPageConfig: MasterDataPageConfig<
       label: "Unit",
       type: "select",
       required: true,
-      options: PRODUCT_UNITS.map((unit) => ({ value: unit, label: unit })),
+      options: PRODUCT_UNITS.map((unit) => ({
+        value: unit,
+        label: `${productUnitLabels[unit]} (${unit})`,
+      })),
     },
     { name: "description", label: "Description", type: "textarea" },
     {
