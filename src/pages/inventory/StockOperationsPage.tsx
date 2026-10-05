@@ -178,6 +178,7 @@ export default function StockOperationsPage() {
   const [optionsRetry, setOptionsRetry] = useState(0);
   const [expiredAttempt, setExpiredAttempt] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const submissionInFlight = useRef(false);
 
   useEffect(() => {
     if (!storedAttempt) return;
@@ -191,25 +192,31 @@ export default function StockOperationsPage() {
 
   useEffect(() => {
     let current = true;
-    const request = Promise.all([
-      productService.list({
-        page: 1,
-        limit: 50,
-        status: "active",
-        sortBy: "name",
-        sortOrder: "asc",
-      }),
-      warehouseService.list({
-        page: 1,
-        limit: 50,
-        status: "active",
-        sortBy: "name",
-        sortOrder: "asc",
-      }),
-    ]);
+    const request = Promise.resolve().then(() => {
+      if (!current) return null;
+      setIsLoadingOptions(true);
+      setOptionsError("");
+      return Promise.all([
+        productService.list({
+          page: 1,
+          limit: 50,
+          status: "active",
+          sortBy: "name",
+          sortOrder: "asc",
+        }),
+        warehouseService.list({
+          page: 1,
+          limit: 50,
+          status: "active",
+          sortBy: "name",
+          sortOrder: "asc",
+        }),
+      ]);
+    });
     void request
-      .then(([productResponse, warehouseResponse]) => {
-        if (!current) return;
+      .then((results) => {
+        if (!current || !results) return;
+        const [productResponse, warehouseResponse] = results;
         setProducts(productResponse.data);
         setWarehouses(warehouseResponse.data);
         setOptionsError("");
@@ -300,6 +307,7 @@ export default function StockOperationsPage() {
   }, [kind, locationId, productId, warehouseId]);
 
   async function submitAttempt(nextAttempt: StockOperationAttempt): Promise<void> {
+    if (submissionInFlight.current) return;
     if (
       storedAttempt &&
       Date.now() - storedAttempt.createdAt >= 24 * 60 * 60 * 1000
@@ -307,6 +315,7 @@ export default function StockOperationsPage() {
       setExpiredAttempt(true);
       return;
     }
+    submissionInFlight.current = true;
     setIsSubmitting(true);
     setOperationErrorText("");
     try {
@@ -350,6 +359,7 @@ export default function StockOperationsPage() {
         persistPendingAttempt(pendingStorageKey, null);
       }
     } finally {
+      submissionInFlight.current = false;
       setIsSubmitting(false);
     }
   }

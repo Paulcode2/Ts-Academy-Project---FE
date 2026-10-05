@@ -47,10 +47,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     let active = true;
-    void dashboardService
-      .getSummary()
+    const request = Promise.resolve().then(() => {
+      if (!active) return null;
+      setLoading(true);
+      setError("");
+      return dashboardService.getSummary();
+    });
+    void request
       .then((result) => {
-        if (!active) return;
+        if (!active || !result) return;
         setSummary(result);
         setError("");
       })

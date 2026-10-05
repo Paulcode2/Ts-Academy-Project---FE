@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { useAuth } from "../../auth/useAuth";
 import { ApiError } from "../../services/api/apiClient";
@@ -13,8 +13,10 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionInFlight = useRef(false);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submissionInFlight.current) return;
     if (isSignUp) {
       setErrorMsg(
         "Account registration is not available yet. Contact an administrator to request an account.",
@@ -23,6 +25,7 @@ export default function Login() {
     }
 
     setErrorMsg("");
+    submissionInFlight.current = true;
     setIsSubmitting(true);
     try {
       await auth.login({ email, password: signInPassword });
@@ -63,6 +66,7 @@ export default function Login() {
         setErrorMsg("Unable to sign in right now. Please try again.");
       }
     } finally {
+      submissionInFlight.current = false;
       setIsSubmitting(false);
     }
   };
