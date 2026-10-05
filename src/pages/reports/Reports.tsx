@@ -280,11 +280,7 @@ function ReportTable({
   );
 }
 
-export default function Reports() {
-  const params = useParams();
-  const kind = REPORTS.some((report) => report.kind === params.reportType)
-    ? (params.reportType as ReportKind)
-    : "inventory";
+function ReportView({ kind }: { kind: ReportKind }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchString = searchParams.toString();
   const queryParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
@@ -359,12 +355,6 @@ export default function Reports() {
     setSearchParams(updated);
   }
 
-  function changeReport(nextKind: ReportKind) {
-    setDraft({});
-    setDraftSort(defaultReportSort(nextKind));
-    setDraftLimit("20");
-  }
-
   const pageCount = Math.max(1, pagination.totalPages);
 
   return (
@@ -377,7 +367,6 @@ export default function Reports() {
             <Link
               key={report.kind}
               to={`/reports/${report.kind}`}
-              onClick={() => changeReport(report.kind)}
               className={kind === report.kind ? "active" : undefined}
             >
               {report.label}
@@ -449,5 +438,19 @@ export default function Reports() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Reports() {
+  const params = useParams();
+  const [searchParams] = useSearchParams();
+  const reportType = REPORTS.some((report) => report.kind === params.reportType)
+    ? (params.reportType as ReportKind)
+    : "inventory";
+  return (
+    <ReportView
+      key={`${reportType}:${searchParams.toString()}`}
+      kind={reportType}
+    />
   );
 }

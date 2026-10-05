@@ -132,11 +132,19 @@ function dateParameter(value: string, isEndDate = false): string | undefined {
 
 function TransferCreationForm({
   onCreated,
+  products,
+  warehouses,
+  isLoadingOptions,
+  optionsError,
+  retryOptions,
 }: {
   onCreated(record: TransferRecord): void;
+  products: ProductRecord[];
+  warehouses: WarehouseRecord[];
+  isLoadingOptions: boolean;
+  optionsError: string;
+  retryOptions(): void;
 }) {
-  const [products, setProducts] = useState<ProductRecord[]>([]);
-  const [warehouses, setWarehouses] = useState<WarehouseRecord[]>([]);
   const [sourceLocations, setSourceLocations] = useState<LocationRecord[]>([]);
   const [destinationLocations, setDestinationLocations] = useState<LocationRecord[]>([]);
   const [productId, setProductId] = useState("");
@@ -144,34 +152,9 @@ function TransferCreationForm({
   const [sourceLocationId, setSourceLocationId] = useState("");
   const [destinationWarehouseId, setDestinationWarehouseId] = useState("");
   const [destinationLocationId, setDestinationLocationId] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionInFlight = useRef(false);
   const [error, setError] = useState("");
-  const [optionsError, setOptionsError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    void Promise.all([
-      productService.list({ page: 1, limit: 50, status: "active", sortBy: "name", sortOrder: "asc" }),
-      warehouseService.list({ page: 1, limit: 50, status: "active", sortBy: "name", sortOrder: "asc" }),
-    ])
-      .then(([productResponse, warehouseResponse]) => {
-        if (!active) return;
-        setProducts(productResponse.data);
-        setWarehouses(warehouseResponse.data);
-      })
-      .catch((reason: unknown) => {
-        if (active) setOptionsError(errorText(reason));
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
   useEffect(() => {
     if (!sourceWarehouseId) return;
     let active = true;
@@ -279,8 +262,15 @@ function TransferCreationForm({
     }
   }
 
-  if (isLoading) return <p role="status">Loading active products and permitted warehouses...</p>;
-  if (optionsError) return <p className="master-data-error" role="alert">{optionsError}</p>;
+  if (isLoadingOptions) return <p role="status">Loading active products and permitted warehouses...</p>;
+  if (optionsError) {
+    return (
+      <p className="master-data-error" role="alert">
+        {optionsError}{" "}
+        <button type="button" onClick={retryOptions}>Retry options</button>
+      </p>
+    );
+  }
 
   return (
     <form className="warehouse-form transfer-form" onSubmit={submit}>
@@ -431,6 +421,7 @@ export default function Transfers() {
   const [records, setRecords] = useState<TransferRecord[]>([]);
   const [filterProducts, setFilterProducts] = useState<ProductRecord[]>([]);
   const [filterWarehouses, setFilterWarehouses] = useState<WarehouseRecord[]>([]);
+  const [filterOptionsLoading, setFilterOptionsLoading] = useState(true);
   const [filterOptionsError, setFilterOptionsError] = useState("");
   const [filterOptionsReload, setFilterOptionsReload] = useState(0);
   const [pagination, setPagination] = useState(EMPTY_PAGINATION);
@@ -453,17 +444,27 @@ export default function Transfers() {
   useEffect(() => {
     if (transferId) return;
     let active = true;
-    void Promise.all([
-      productService.list({ page: 1, limit: 50, status: "active", sortBy: "name", sortOrder: "asc" }),
-      warehouseService.list({ page: 1, limit: 50, status: "active", sortBy: "name", sortOrder: "asc" }),
-    ])
-      .then(([products, warehouses]) => {
-        if (!active) return;
+    const request = Promise.resolve().then(() => {
+      if (!active) return null;
+      setFilterOptionsLoading(true);
+      setFilterOptionsError("");
+      return Promise.all([
+        productService.list({ page: 1, limit: 50, status: "active", sortBy: "name", sortOrder: "asc" }),
+        warehouseService.list({ page: 1, limit: 50, status: "active", sortBy: "name", sortOrder: "asc" }),
+      ]);
+    });
+    void request
+      .then((results) => {
+        if (!active || !results) return;
+        const [products, warehouses] = results;
         setFilterProducts(products.data);
         setFilterWarehouses(warehouses.data);
       })
       .catch((reason: unknown) => {
         if (active) setFilterOptionsError(errorText(reason));
+      })
+      .finally(() => {
+        if (active) setFilterOptionsLoading(false);
       });
     return () => {
       active = false;
@@ -556,7 +557,13 @@ export default function Transfers() {
       else if (name === "reject") await transferService.reject(transferId, rejectionReason.trim());
       else if (name === "cancel") await transferService.cancel(transferId);
       else await transferService.complete(transferId);
-      setSuccess(`Transfer ${name === "complete" ? "completed" : `${name}d`} successfully.`);
+      const successVerb: Record<typeof name, string> = {
+        approve: "approved",
+        reject: "rejected",
+        cancel: "cancelled",
+        complete: "completed",
+      };
+      setSuccess(`Transfer ${successVerb[name]} successfully.`);
       setShowRejectForm(false);
       setRejectionReason("");
       setReload((value) => value + 1);
@@ -587,7 +594,8 @@ export default function Transfers() {
   }
 
   const canCancel = detail
-    ? can("transfers:cancel-own") && (isInitiator(detail) || isManagerOrAdmin)
+    ? isManagerOrAdmin ||
+      (can("transfers:cancel-own") && isInitiator(detail))
     : false;
   const canReview = isManagerOrAdmin && can("transfers:review");
   const totalPages = Math.max(1, pagination.totalPages);
@@ -681,6 +689,14 @@ export default function Transfers() {
           <>
             {isCreating && can("transfers:request") && (
               <TransferCreationForm
+                products={filterProducts}
+                warehouses={filterWarehouses}
+                isLoadingOptions={filterOptionsLoading}
+                optionsError={filterOptionsError}
+                retryOptions={() => {
+                  setFilterOptionsError("");
+                  setFilterOptionsReload((value) => value + 1);
+                }}
                 onCreated={(record) => {
                   setCreateSuccess(`Transfer ${record.reference} requested.`);
                   setIsCreating(false);
@@ -739,7 +755,7 @@ export default function Transfers() {
                 <option value={50}>50 per page</option>
               </select>
             </div>
-            {filterOptionsError && (
+            {filterOptionsError && !isCreating && (
               <p className="master-data-error" role="alert">
                 Could not load transfer filter options. {filterOptionsError}{" "}
                 <button type="button" onClick={() => {

@@ -70,6 +70,9 @@ function getErrorText(error: unknown): string {
   if (error.status === 403) {
     return "You do not have access to this record or action.";
   }
+  if (error.status === 401) {
+    return "Your session has expired. Sign in again.";
+  }
   if (error.status === 404) {
     return "This record could not be found. Refresh the list and try again.";
   }
@@ -123,20 +126,28 @@ export default function MasterDataPage<
   >({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detailRecord, setDetailRecord] = useState<TRecord | null>(null);
+  const [detailRequestId, setDetailRequestId] = useState<string | null>(null);
   const [busyRecordId, setBusyRecordId] = useState<string | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
+  const [filterOptionsRetry, setFilterOptionsRetry] = useState(0);
   const requestSequence = useRef(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutationInFlight = useRef(false);
+  const statusMutationInFlight = useRef(false);
   const pageCount = Math.max(1, pagination.totalPages);
 
   useEffect(() => {
     const sequence = ++requestSequence.current;
 
-    void config.service
-      .list(filters)
+    const request = Promise.resolve().then(() => {
+      if (sequence !== requestSequence.current) return null;
+      setIsLoading(true);
+      setListError("");
+      return config.service.list(filters);
+    });
+    void request
       .then((response) => {
-        if (sequence !== requestSequence.current) return;
+        if (sequence !== requestSequence.current || !response) return;
         if (
           response.pagination.totalPages > 0 &&
           filters.page !== undefined &&
@@ -151,6 +162,7 @@ export default function MasterDataPage<
         }
         setRecords(response.data);
         setPagination(response.pagination);
+        setListError("");
       })
       .catch((error: unknown) => {
         if (sequence !== requestSequence.current) return;
@@ -178,19 +190,25 @@ export default function MasterDataPage<
     const filterFields = config.filters ?? [];
     if (filterFields.length === 0) return;
 
-    void Promise.all(
-      filterFields.map(
-        async (field) =>
-          [
-            field.name,
-            field.loadOptions
-              ? await field.loadOptions()
-              : (field.options ?? []),
-          ] as const,
-      ),
-    )
+    const request = Promise.resolve().then(() => {
+      if (!isCurrent) return [];
+      setFilterError("");
+      return Promise.all(
+        filterFields.map(
+          async (field) =>
+            [
+              field.name,
+              field.loadOptions
+                ? await field.loadOptions()
+                : (field.options ?? []),
+            ] as const,
+        ),
+      );
+    });
+    void request
       .then((options) => {
         if (isCurrent) {
+          setFilterError("");
           setFieldOptions((current) => ({
             ...current,
             ...Object.fromEntries(options),
@@ -204,7 +222,7 @@ export default function MasterDataPage<
     return () => {
       isCurrent = false;
     };
-  }, [config]);
+  }, [config, filterOptionsRetry]);
 
   async function loadOptions(): Promise<void> {
     setIsLoadingForm(true);
@@ -216,7 +234,7 @@ export default function MasterDataPage<
             [
               field.name,
               field.loadOptions
-                ? await field.loadOptions()
+                ? (fieldOptions[field.name] ?? (await field.loadOptions()))
                 : (field.options ?? []),
             ] as const,
         ),
@@ -242,6 +260,7 @@ export default function MasterDataPage<
   }
 
   async function startDetail(recordId: string, edit = false): Promise<void> {
+    setDetailRequestId(recordId);
     setFormError("");
     setDetailError("");
     setIsLoadingDetail(true);
@@ -299,6 +318,8 @@ export default function MasterDataPage<
   }
 
   async function toggleStatus(record: TRecord): Promise<void> {
+    if (statusMutationInFlight.current) return;
+    statusMutationInFlight.current = true;
     setBusyRecordId(record._id);
     setListError("");
     try {
@@ -311,6 +332,7 @@ export default function MasterDataPage<
     } catch (error) {
       setListError(getErrorText(error));
     } finally {
+      statusMutationInFlight.current = false;
       setBusyRecordId(null);
     }
   }
@@ -396,6 +418,14 @@ export default function MasterDataPage<
         {detailError && (
           <p className="master-data-error" role="alert">
             {detailError}
+            <button
+              type="button"
+              onClick={() => {
+                if (detailRequestId) void startDetail(detailRequestId);
+              }}
+            >
+              Retry
+            </button>
           </p>
         )}
         {successMessage && <p role="status">{successMessage}</p>}
@@ -550,11 +580,26 @@ export default function MasterDataPage<
         {filterError && (
           <p className="master-data-error" role="alert">
             {filterError}
+            <button
+              type="button"
+              onClick={() => setFilterOptionsRetry((count) => count + 1)}
+            >
+              Retry filter options
+            </button>
           </p>
         )}
         {listError && (
           <p className="master-data-error" role="alert">
             {listError}
+            <button
+              type="button"
+              onClick={() => {
+                setIsLoading(true);
+                setReloadCount((count) => count + 1);
+              }}
+            >
+              Retry
+            </button>
           </p>
         )}
         {isLoading ? (
