@@ -68,6 +68,26 @@
   padding: 0.25rem 0.7rem;
   border-radius: 999px;
 }
+
+.dashboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dashboard-section {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.dashboard-section h2 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-error {
+  color: #b42318;
+}
 /* ------------------------ STATISTICS ----------------------- */
 .stat-row {
   display: flex;
