@@ -18,8 +18,6 @@ import type {
 } from "../../types/inventory";
 import type { LocationRecord, ProductRecord, WarehouseRecord } from "../../types/masterData";
 import "./transfers.css";
-import "../Warehouses/warehouse.css";
-import "../../components/masterDataPage.css";
 
 const TRANSFER_STATUSES: TransferStatus[] = [
   "PENDING",
@@ -130,6 +128,61 @@ function dateParameter(value: string, isEndDate = false): string | undefined {
   ).toISOString();
 }
 
+function statusClass(status: TransferStatus): string {
+  if (status === "COMPLETED") return "pill-ok";
+  if (status === "PENDING") return "pill-warn";
+  if (status === "REJECTED" || status === "CANCELLED") return "pill-danger";
+  return "pill-info";
+}
+
+function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  confirmVariant = "danger",
+  isOpen,
+  onConfirm,
+  onCancel,
+  isWorking,
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmVariant?: "primary" | "danger";
+  isOpen: boolean;
+  onConfirm(): void;
+  onCancel(): void;
+  isWorking: boolean;
+}) {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div className="modal">
+        <h2 id="confirm-title" className="modal-title">{title}</h2>
+        <p className="modal-body">{message}</p>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onCancel}
+            disabled={isWorking}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={`btn btn-${confirmVariant}`}
+            onClick={onConfirm}
+            disabled={isWorking}
+          >
+            {isWorking ? "Working..." : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TransferCreationForm({
   onCreated,
   products,
@@ -155,6 +208,7 @@ function TransferCreationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionInFlight = useRef(false);
   const [error, setError] = useState("");
+
   useEffect(() => {
     if (!sourceWarehouseId) return;
     let active = true;
@@ -262,102 +316,126 @@ function TransferCreationForm({
     }
   }
 
-  if (isLoadingOptions) return <p role="status">Loading active products and permitted warehouses...</p>;
+  if (isLoadingOptions) {
+    return (
+      <div className="empty-state" role="status">
+        <p className="empty-state-title">Loading options</p>
+        <p className="empty-state-body">Fetching active products and permitted warehouses...</p>
+      </div>
+    );
+  }
   if (optionsError) {
     return (
-      <p className="master-data-error" role="alert">
-        {optionsError}{" "}
-        <button type="button" onClick={retryOptions}>Retry options</button>
-      </p>
+      <div className="error-state" role="alert">
+        <span>Could not load transfer options.</span>
+        <button type="button" className="btn btn-secondary" onClick={retryOptions}>
+          Retry
+        </button>
+      </div>
     );
   }
 
   return (
-    <form className="warehouse-form transfer-form" onSubmit={submit}>
+    <form className="transfer-form" onSubmit={submit}>
       <h2>Request Transfer</h2>
-      <label className="master-data-field">
-        Product
-        <select value={productId} onChange={(event) => setProductId(event.target.value)} required disabled={isSubmitting}>
-          <option value="">Select an active product</option>
-          {products.map((product) => (
-            <option key={product._id} value={product._id}>{product.name} ({product.sku})</option>
-          ))}
-        </select>
-      </label>
-      <label className="master-data-field">
-        Source warehouse
-        <select
-          value={sourceWarehouseId}
-          onChange={(event) => {
-            setSourceWarehouseId(event.target.value);
-            setSourceLocationId("");
-            setSourceLocations([]);
-          }}
-          required
-          disabled={isSubmitting}
-        >
-          <option value="">Select source warehouse</option>
-          {warehouses.map((warehouse) => (
-            <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
-          ))}
-        </select>
-      </label>
-      <label className="master-data-field">
-        Source location
-        <select
-          value={sourceLocationId}
-          onChange={(event) => setSourceLocationId(event.target.value)}
-          required
-          disabled={!sourceWarehouseId || isSubmitting}
-        >
-          <option value="">Select source location</option>
-          {sourceLocations.map((location) => (
-            <option key={location._id} value={location._id}>{location.name} ({location.code})</option>
-          ))}
-        </select>
-      </label>
-      <label className="master-data-field">
-        Destination warehouse
-        <select
-          value={destinationWarehouseId}
-          onChange={(event) => {
-            setDestinationWarehouseId(event.target.value);
-            setDestinationLocationId("");
-            setDestinationLocations([]);
-          }}
-          required
-          disabled={isSubmitting}
-        >
-          <option value="">Select destination warehouse</option>
-          {warehouses.map((warehouse) => (
-            <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
-          ))}
-        </select>
-      </label>
-      <label className="master-data-field">
-        Destination location
-        <select
-          value={destinationLocationId}
-          onChange={(event) => setDestinationLocationId(event.target.value)}
-          required
-          disabled={!destinationWarehouseId || isSubmitting}
-        >
-          <option value="">Select destination location</option>
-          {destinationLocations.map((location) => (
-            <option
-              key={location._id}
-              value={location._id}
-              disabled={location._id === sourceLocationId}
-            >
-              {location.name} ({location.code})
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="master-data-field">
-        Quantity
-        <input name="quantity" type="number" min="0.0000001" step="any" required disabled={isSubmitting} />
-      </label>
+      <div className="transfer-flow">
+        <label className="master-data-field">
+          Product
+          <select value={productId} onChange={(event) => setProductId(event.target.value)} required disabled={isSubmitting}>
+            <option value="">Select an active product</option>
+            {products.map((product) => (
+              <option key={product._id} value={product._id}>{product.name} ({product.sku})</option>
+            ))}
+          </select>
+        </label>
+        <label className="master-data-field">
+          Quantity
+          <input name="quantity" type="number" min="0.0000001" step="any" required disabled={isSubmitting} />
+        </label>
+      </div>
+
+      <div className="transfer-flow">
+        <label className="master-data-field">
+          Source warehouse
+          <select
+            value={sourceWarehouseId}
+            onChange={(event) => {
+              setSourceWarehouseId(event.target.value);
+              setSourceLocationId("");
+              setSourceLocations([]);
+            }}
+            required
+            disabled={isSubmitting}
+          >
+            <option value="">Select source warehouse</option>
+            {warehouses.map((warehouse) => (
+              <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
+            ))}
+          </select>
+        </label>
+        <div className="transfer-flow-arrow" aria-hidden="true">
+          &darr;
+        </div>
+        <label className="master-data-field">
+          Source location
+          <select
+            value={sourceLocationId}
+            onChange={(event) => setSourceLocationId(event.target.value)}
+            required
+            disabled={!sourceWarehouseId || isSubmitting}
+          >
+            <option value="">Select source location</option>
+            {sourceLocations.map((location) => (
+              <option key={location._id} value={location._id}>{location.name} ({location.code})</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="transfer-flow">
+        <label className="master-data-field">
+          Destination warehouse
+          <select
+            value={destinationWarehouseId}
+            onChange={(event) => {
+              setDestinationWarehouseId(event.target.value);
+              setDestinationLocationId("");
+              setDestinationLocations([]);
+            }}
+            required
+            disabled={isSubmitting}
+          >
+            <option value="">Select destination warehouse</option>
+            {warehouses.map((warehouse) => (
+              <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
+            ))}
+          </select>
+        </label>
+        <div className="transfer-flow-arrow" aria-hidden="true">
+          &darr;
+        </div>
+        <label className="master-data-field">
+          Destination location
+          <select
+            value={destinationLocationId}
+            onChange={(event) => setDestinationLocationId(event.target.value)}
+            required
+            disabled={!destinationWarehouseId || isSubmitting}
+          >
+            <option value="">Select destination location</option>
+            {destinationLocations.map((location) => (
+              <option
+                key={location._id}
+                value={location._id}
+                disabled={location._id === sourceLocationId}
+              >
+                {location.name} ({location.code})
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <label className="master-data-field">
         Reference (optional)
         <input name="reference" type="text" maxLength={100} disabled={isSubmitting} />
@@ -371,6 +449,9 @@ function TransferCreationForm({
         <button type="submit" disabled={isSubmitting || sourceLocationId === destinationLocationId}>
           {isSubmitting ? "Submitting..." : "Request transfer"}
         </button>
+        <button type="button" className="btn btn-secondary" onClick={() => {}} disabled={isSubmitting}>
+          Reset
+        </button>
       </div>
     </form>
   );
@@ -380,31 +461,143 @@ function TransferDetails({ transfer }: { transfer: TransferRecord }) {
   const productName = typeof transfer.product === "string" ? transfer.product : transfer.product.name ?? transfer.product.id;
   const sku = typeof transfer.product === "string" ? "—" : transfer.product.sku ?? "—";
   const unit = typeof transfer.product === "string" ? "" : transfer.product.unit ?? "";
+
   return (
-    <dl className="master-data-details">
-      <div><dt>Reference</dt><dd>{transfer.reference}</dd></div>
-      <div><dt>Status</dt><dd>{transfer.status}</dd></div>
-      <div><dt>Product</dt><dd>{productName}</dd></div>
-      <div><dt>SKU</dt><dd>{sku}</dd></div>
-      <div><dt>Unit</dt><dd>{unit || "—"}</dd></div>
-      <div><dt>Quantity</dt><dd>{transfer.quantity} {unit}</dd></div>
-      <div><dt>Source warehouse</dt><dd>{entityLabel(transfer.sourceWarehouse)}</dd></div>
-      <div><dt>Source location</dt><dd>{entityLabel(transfer.sourceLocation)}</dd></div>
-      <div><dt>Destination warehouse</dt><dd>{entityLabel(transfer.destinationWarehouse)}</dd></div>
-      <div><dt>Destination location</dt><dd>{entityLabel(transfer.destinationLocation)}</dd></div>
-      <div><dt>Initiator</dt><dd>{entityLabel(transfer.initiatedBy)}</dd></div>
-      <div><dt>Approver</dt><dd>{entityLabel(transfer.approvedBy)}</dd></div>
-      <div><dt>Rejector</dt><dd>{entityLabel(transfer.rejectedBy)}</dd></div>
-      <div><dt>Completer</dt><dd>{entityLabel(transfer.completedBy)}</dd></div>
-      <div><dt>Canceller</dt><dd>{entityLabel(transfer.cancelledBy)}</dd></div>
-      <div><dt>Created</dt><dd>{timestamp(transfer.createdAt)}</dd></div>
-      <div><dt>Approved</dt><dd>{timestamp(transfer.approvedAt)}</dd></div>
-      <div><dt>Rejected</dt><dd>{timestamp(transfer.rejectedAt)}</dd></div>
-      <div><dt>Completed</dt><dd>{timestamp(transfer.completedAt)}</dd></div>
-      <div><dt>Cancelled</dt><dd>{timestamp(transfer.cancelledAt)}</dd></div>
-      <div><dt>Notes</dt><dd>{transfer.notes || "—"}</dd></div>
-      <div><dt>Rejection reason</dt><dd>{transfer.rejectionReason || "—"}</dd></div>
-    </dl>
+    <div className="transfer-detail">
+      <div className="transfer-detail-section">
+        <h3>Transfer information</h3>
+        <dl className="transfer-detail-grid">
+          <div>
+            <dt>Reference</dt>
+            <dd>{transfer.reference}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>
+              <span className={`pill ${statusClass(transfer.status)}`}>{transfer.status}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{timestamp(transfer.createdAt)}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{timestamp(transfer.updatedAt)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="transfer-detail-section">
+        <h3>Route</h3>
+        <dl className="transfer-detail-grid">
+          <div>
+            <dt>Source warehouse</dt>
+            <dd>{entityLabel(transfer.sourceWarehouse)}</dd>
+          </div>
+          <div>
+            <dt>Source location</dt>
+            <dd>{entityLabel(transfer.sourceLocation)}</dd>
+          </div>
+          <div>
+            <dt>Destination warehouse</dt>
+            <dd>{entityLabel(transfer.destinationWarehouse)}</dd>
+          </div>
+          <div>
+            <dt>Destination location</dt>
+            <dd>{entityLabel(transfer.destinationLocation)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="transfer-detail-section">
+        <h3>Item</h3>
+        <dl className="transfer-detail-grid">
+          <div>
+            <dt>Product</dt>
+            <dd>{productName}</dd>
+          </div>
+          <div>
+            <dt>SKU</dt>
+            <dd>{sku}</dd>
+          </div>
+          <div>
+            <dt>Unit</dt>
+            <dd>{unit || "—"}</dd>
+          </div>
+          <div>
+            <dt>Quantity</dt>
+            <dd>{transfer.quantity} {unit}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="transfer-detail-section">
+        <h3>People</h3>
+        <dl className="transfer-detail-grid">
+          <div>
+            <dt>Initiator</dt>
+            <dd>{entityLabel(transfer.initiatedBy)}</dd>
+          </div>
+          <div>
+            <dt>Approver</dt>
+            <dd>{entityLabel(transfer.approvedBy)}</dd>
+          </div>
+          <div>
+            <dt>Rejector</dt>
+            <dd>{entityLabel(transfer.rejectedBy)}</dd>
+          </div>
+          <div>
+            <dt>Completer</dt>
+            <dd>{entityLabel(transfer.completedBy)}</dd>
+          </div>
+          <div>
+            <dt>Canceller</dt>
+            <dd>{entityLabel(transfer.cancelledBy)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="transfer-detail-section">
+        <h3>Timeline</h3>
+        <dl className="transfer-detail-grid">
+          <div>
+            <dt>Created</dt>
+            <dd>{timestamp(transfer.createdAt)}</dd>
+          </div>
+          <div>
+            <dt>Approved</dt>
+            <dd>{timestamp(transfer.approvedAt)}</dd>
+          </div>
+          <div>
+            <dt>Rejected</dt>
+            <dd>{timestamp(transfer.rejectedAt)}</dd>
+          </div>
+          <div>
+            <dt>Completed</dt>
+            <dd>{timestamp(transfer.completedAt)}</dd>
+          </div>
+          <div>
+            <dt>Cancelled</dt>
+            <dd>{timestamp(transfer.cancelledAt)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      {transfer.notes && (
+        <div className="transfer-detail-section">
+          <h3>Notes</h3>
+          <p style={{ margin: 0, fontSize: "0.9rem" }}>{transfer.notes}</p>
+        </div>
+      )}
+
+      {transfer.rejectionReason && (
+        <div className="transfer-detail-section">
+          <h3>Rejection reason</h3>
+          <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--danger, #dc2626)" }}>{transfer.rejectionReason}</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -439,6 +632,7 @@ export default function Transfers() {
   const [actionConflict, setActionConflict] = useState(false);
   const [success, setSuccess] = useState("");
   const [reload, setReload] = useState(0);
+  const [confirmAction, setConfirmAction] = useState<"approve" | "cancel" | "complete" | null>(null);
   const actionInFlight = useRef(false);
 
   useEffect(() => {
@@ -539,9 +733,7 @@ export default function Transfers() {
     setSearchParams(updated);
   }
 
-  async function runAction(
-    name: "approve" | "reject" | "cancel" | "complete",
-  ) {
+  async function runAction(name: "approve" | "reject" | "cancel" | "complete") {
     if (!transferId || actionInFlight.current) return;
     if (name === "reject" && !rejectionReason.trim()) {
       setActionError("A rejection reason is required.");
@@ -619,65 +811,117 @@ export default function Transfers() {
 
         {transferId ? (
           <>
-            <p><Link to={returnPath}>Back to transfers</Link></p>
+            <p style={{ marginBottom: "0.75rem" }}>
+              <Link to={returnPath} className="btn btn-ghost" style={{ padding: "0.25rem 0" }}>
+                &larr; Back to transfers
+              </Link>
+            </p>
             {detailLoading ? (
-              <p role="status">Loading transfer details...</p>
+              <div className="empty-state" role="status">
+                <p className="empty-state-title">Loading transfer details</p>
+                <p className="empty-state-body">Please wait while we fetch the transfer record.</p>
+              </div>
             ) : detailError ? (
-              <p className="master-data-error" role="alert">
-                {detailError}{" "}
-                <button type="button" onClick={() => setReload((value) => value + 1)}>Retry</button>
-              </p>
+              <div className="error-state" role="alert">
+                <span>{detailError}</span>
+                <button type="button" className="btn btn-secondary" onClick={() => setReload((value) => value + 1)}>
+                  Retry
+                </button>
+              </div>
             ) : detail ? (
               <>
                 <TransferDetails transfer={detail} />
                 {actionError && (
-                  <p className="master-data-error" role="alert">
-                    {actionError}
+                  <div className="error-state" role="alert">
+                    <span>{actionError}</span>
                     {actionConflict && (
-                      <button type="button" onClick={() => setReload((value) => value + 1)}>Refresh transfer</button>
+                      <button type="button" className="btn btn-secondary" onClick={() => setReload((value) => value + 1)}>
+                        Refresh transfer
+                      </button>
                     )}
-                  </p>
+                  </div>
                 )}
                 <div className="transfer-actions">
                   {detail.status === "PENDING" && canReview && (
                     <>
-                      <button type="button" className="btn-primary" disabled={Boolean(action)} onClick={() => void runAction("approve")}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={Boolean(action)}
+                        onClick={() => setConfirmAction("approve")}
+                      >
                         {action === "approve" ? "Approving..." : "Approve"}
                       </button>
                       {!showRejectForm ? (
-                        <button type="button" disabled={Boolean(action)} onClick={() => setShowRejectForm(true)}>Reject</button>
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          disabled={Boolean(action)}
+                          onClick={() => setShowRejectForm(true)}
+                        >
+                          Reject
+                        </button>
                       ) : (
                         <form
+                          className="rejection-form"
                           onSubmit={(event) => {
                             event.preventDefault();
+                            setShowRejectForm(false);
                             void runAction("reject");
                           }}
                         >
-                          <label className="master-data-field">
-                            Rejection reason
+                          <label>
+                            Rejection reason (required)
                             <textarea
                               value={rejectionReason}
                               onChange={(event) => setRejectionReason(event.target.value)}
                               maxLength={500}
                               required
                               disabled={Boolean(action)}
+                              placeholder="Provide a clear reason for rejecting this transfer."
                             />
                           </label>
-                          <button type="submit" disabled={Boolean(action) || !rejectionReason.trim()}>
-                            {action === "reject" ? "Rejecting..." : "Confirm rejection"}
-                          </button>
-                          <button type="button" disabled={Boolean(action)} onClick={() => setShowRejectForm(false)}>Keep transfer</button>
+                          <div className="transfer-actions">
+                            <button
+                              type="submit"
+                              className="btn btn-danger"
+                              disabled={Boolean(action) || !rejectionReason.trim()}
+                            >
+                              {action === "reject" ? "Rejecting..." : "Confirm rejection"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              disabled={Boolean(action)}
+                              onClick={() => {
+                                setShowRejectForm(false);
+                                setRejectionReason("");
+                              }}
+                            >
+                              Keep transfer
+                            </button>
+                          </div>
                         </form>
                       )}
                     </>
                   )}
                   {detail.status === "APPROVED" && canReview && (
-                    <button type="button" className="btn-primary" disabled={Boolean(action)} onClick={() => void runAction("complete")}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={Boolean(action)}
+                      onClick={() => setConfirmAction("complete")}
+                    >
                       {action === "complete" ? "Completing..." : "Complete"}
                     </button>
                   )}
                   {(detail.status === "PENDING" || detail.status === "APPROVED") && canCancel && (
-                    <button type="button" disabled={Boolean(action)} onClick={() => void runAction("cancel")}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      disabled={Boolean(action)}
+                      onClick={() => setConfirmAction("cancel")}
+                    >
                       {action === "cancel" ? "Cancelling..." : "Cancel"}
                     </button>
                   )}
@@ -709,71 +953,136 @@ export default function Transfers() {
                 }}
               />
             )}
-            {createSuccess && <p role="status">{createSuccess}</p>}
-            {success && <p role="status">{success}</p>}
-            <div className="master-data-filters transfer-filters">
-              <select aria-label="Status" value={query.status ?? ""} onChange={(event) => updateFilter("status", event.target.value)}>
-                <option value="">All statuses</option>
-                {TRANSFER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
-              </select>
-              <select aria-label="Product" value={query.product ?? ""} onChange={(event) => updateFilter("product", event.target.value)}>
-                <option value="">All products</option>
-                {filterProducts.map((product) => (
-                  <option key={product._id} value={product._id}>{product.name} ({product.sku})</option>
-                ))}
-              </select>
-              <select aria-label="Source warehouse" value={query.sourceWarehouse ?? ""} onChange={(event) => updateFilter("sourceWarehouse", event.target.value)}>
-                <option value="">All source warehouses</option>
-                {filterWarehouses.map((warehouse) => (
-                  <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
-                ))}
-              </select>
-              <select aria-label="Destination warehouse" value={query.destinationWarehouse ?? ""} onChange={(event) => updateFilter("destinationWarehouse", event.target.value)}>
-                <option value="">All destination warehouses</option>
-                {filterWarehouses.map((warehouse) => (
-                  <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
-                ))}
-              </select>
-              <input aria-label="Initiator user ID" placeholder="Initiator user ID" value={query.initiatedBy ?? ""} onChange={(event) => updateFilter("initiatedBy", event.target.value)} />
-              <input aria-label="Reference" placeholder="Reference" value={query.reference ?? ""} onChange={(event) => updateFilter("reference", event.target.value)} />
-              <label className="master-data-field">Start date<input type="date" value={params.get("startDate") ?? ""} onChange={(event) => updateFilter("startDate", dateParameter(event.target.value) ?? "")} /></label>
-              <label className="master-data-field">End date<input type="date" value={params.get("endDate")?.slice(0, 10) ?? ""} onChange={(event) => updateFilter("endDate", dateParameter(event.target.value, true) ?? "")} /></label>
-              <select aria-label="Sort transfers" value={query.sort ?? "-createdAt"} onChange={(event) => updateFilter("sort", event.target.value)}>
-                <option value="-createdAt">Newest first</option>
-                <option value="createdAt">Oldest first</option>
-                <option value="updatedAt">Recently updated</option>
-                <option value="-updatedAt">Least recently updated</option>
-                <option value="reference">Reference A–Z</option>
-                <option value="-reference">Reference Z–A</option>
-                <option value="status">Status A–Z</option>
-                <option value="-status">Status Z–A</option>
-                <option value="quantity">Quantity low to high</option>
-                <option value="-quantity">Quantity high to low</option>
-              </select>
-              <select aria-label="Page size" value={limit} onChange={(event) => updateFilter("limit", Number(event.target.value))}>
-                <option value={20}>20 per page</option>
-                <option value={50}>50 per page</option>
-              </select>
+            {createSuccess && (
+              <div className="empty-state" role="status">
+                <p className="empty-state-title">Transfer created</p>
+                <p className="empty-state-body">{createSuccess}</p>
+              </div>
+            )}
+            {success && (
+              <div className="empty-state" role="status">
+                <p className="empty-state-title">Success</p>
+                <p className="empty-state-body">{success}</p>
+              </div>
+            )}
+
+            <div className="transfer-filters">
+              <label>
+                Status
+                <select aria-label="Status" value={query.status ?? ""} onChange={(event) => updateFilter("status", event.target.value)}>
+                  <option value="">All statuses</option>
+                  {TRANSFER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </label>
+              <label>
+                Product
+                <select aria-label="Product" value={query.product ?? ""} onChange={(event) => updateFilter("product", event.target.value)}>
+                  <option value="">All products</option>
+                  {filterProducts.map((product) => (
+                    <option key={product._id} value={product._id}>{product.name} ({product.sku})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Source warehouse
+                <select aria-label="Source warehouse" value={query.sourceWarehouse ?? ""} onChange={(event) => updateFilter("sourceWarehouse", event.target.value)}>
+                  <option value="">All source warehouses</option>
+                  {filterWarehouses.map((warehouse) => (
+                    <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Destination warehouse
+                <select aria-label="Destination warehouse" value={query.destinationWarehouse ?? ""} onChange={(event) => updateFilter("destinationWarehouse", event.target.value)}>
+                  <option value="">All destination warehouses</option>
+                  {filterWarehouses.map((warehouse) => (
+                    <option key={warehouse._id} value={warehouse._id}>{warehouse.name} ({warehouse.code})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Reference
+                <input aria-label="Reference" placeholder="Reference" value={query.reference ?? ""} onChange={(event) => updateFilter("reference", event.target.value)} />
+              </label>
+              <label>
+                Start date
+                <input type="date" value={params.get("startDate") ?? ""} onChange={(event) => updateFilter("startDate", dateParameter(event.target.value) ?? "")} />
+              </label>
+              <label>
+                End date
+                <input type="date" value={params.get("endDate")?.slice(0, 10) ?? ""} onChange={(event) => updateFilter("endDate", dateParameter(event.target.value, true) ?? "")} />
+              </label>
+              <label>
+                Sort
+                <select aria-label="Sort transfers" value={query.sort ?? "-createdAt"} onChange={(event) => updateFilter("sort", event.target.value)}>
+                  <option value="-createdAt">Newest first</option>
+                  <option value="createdAt">Oldest first</option>
+                  <option value="updatedAt">Recently updated</option>
+                  <option value="-updatedAt">Least recently updated</option>
+                  <option value="reference">Reference A–Z</option>
+                  <option value="-reference">Reference Z–A</option>
+                  <option value="status">Status A–Z</option>
+                  <option value="-status">Status Z–A</option>
+                  <option value="quantity">Quantity low to high</option>
+                  <option value="-quantity">Quantity high to low</option>
+                </select>
+              </label>
+              <label>
+                Page size
+                <select aria-label="Page size" value={limit} onChange={(event) => updateFilter("limit", Number(event.target.value))}>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </label>
             </div>
+
             {filterOptionsError && !isCreating && (
-              <p className="master-data-error" role="alert">
-                Could not load transfer filter options. {filterOptionsError}{" "}
-                <button type="button" onClick={() => {
+              <div className="error-state" role="alert">
+                <span>Could not load transfer filter options. {filterOptionsError}</span>
+                <button type="button" className="btn btn-secondary" onClick={() => {
                   setFilterOptionsError("");
                   setFilterOptionsReload((value) => value + 1);
-                }}>Retry options</button>
-              </p>
+                }}>
+                  Retry options
+                </button>
+              </div>
             )}
-            {listError && <p className="master-data-error" role="alert">{listError} <button type="button" onClick={() => setReload((value) => value + 1)}>Retry</button></p>}
+            {listError && (
+              <div className="error-state" role="alert">
+                <span>{listError}</span>
+                <button type="button" className="btn btn-secondary" onClick={() => setReload((value) => value + 1)}>
+                  Retry
+                </button>
+              </div>
+            )}
             {isLoading ? (
-              <p role="status">Loading transfers...</p>
+              <div className="empty-state" role="status">
+                <p className="empty-state-title">Loading transfers</p>
+                <p className="empty-state-body">Please wait while we fetch the transfer list.</p>
+              </div>
             ) : listError ? null : records.length === 0 ? (
-              <p role="status">No transfers match the selected filters.</p>
+              <div className="empty-state">
+                <p className="empty-state-title">No transfers found</p>
+                <p className="empty-state-body">
+                  No transfers match the selected filters. Try adjusting your criteria or clear filters to see all transfers.
+                </p>
+              </div>
             ) : (
               <div className="transfer-table-wrap">
                 <table className="activity-table">
                   <thead>
-                    <tr><th>Reference</th><th>Product</th><th>Quantity</th><th>Source</th><th>Destination</th><th>Initiated by</th><th>Status</th><th>Created</th><th>Details</th></tr>
+                    <tr>
+                      <th>Reference</th>
+                      <th>Product</th>
+                      <th>Quantity</th>
+                      <th>Source</th>
+                      <th>Destination</th>
+                      <th>Initiated by</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th>Details</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {records.map((transfer) => (
@@ -784,9 +1093,15 @@ export default function Transfers() {
                         <td>{entityLabel(transfer.sourceWarehouse)} / {entityLabel(transfer.sourceLocation)}</td>
                         <td>{entityLabel(transfer.destinationWarehouse)} / {entityLabel(transfer.destinationLocation)}</td>
                         <td>{entityLabel(transfer.initiatedBy)}</td>
-                        <td><span className={`pill ${transfer.status === "COMPLETED" ? "pill-ok" : transfer.status === "PENDING" ? "pill-warn" : transfer.status === "REJECTED" || transfer.status === "CANCELLED" ? "pill-danger" : "pill-ok"}`}>{transfer.status}</span></td>
+                        <td>
+                          <span className={`pill ${statusClass(transfer.status)}`}>{transfer.status}</span>
+                        </td>
                         <td>{timestamp(transfer.createdAt)}</td>
-                        <td><Link to={`/transfers/${encodeURIComponent(transfer.id)}`} state={{ from: `${location.pathname}${location.search}` }}>View</Link></td>
+                        <td>
+                          <Link to={`/transfers/${encodeURIComponent(transfer.id)}`} state={{ from: `${location.pathname}${location.search}` }}>
+                            View
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -801,6 +1116,26 @@ export default function Transfers() {
             </div>
           </>
         )}
+
+        <ConfirmDialog
+          title={confirmAction === "approve" ? "Approve transfer" : confirmAction === "cancel" ? "Cancel transfer" : "Complete transfer"}
+          message={
+            confirmAction === "approve"
+              ? "This will approve the transfer and make it eligible for completion. Are you sure?"
+              : confirmAction === "cancel"
+                ? "This will cancel the transfer. This action cannot be undone."
+                : "This will mark the transfer as completed and update stock levels. Are you sure?"
+          }
+          confirmLabel={confirmAction === "approve" ? "Approve" : confirmAction === "cancel" ? "Cancel transfer" : "Complete"}
+          confirmVariant={confirmAction === "cancel" ? "danger" : "primary"}
+          isOpen={confirmAction !== null}
+          isWorking={Boolean(action)}
+          onConfirm={() => {
+            if (confirmAction) void runAction(confirmAction);
+            setConfirmAction(null);
+          }}
+          onCancel={() => setConfirmAction(null)}
+        />
       </main>
     </div>
   );

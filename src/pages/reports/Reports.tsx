@@ -226,6 +226,25 @@ function dateTime(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
+function stockStatusClass(status: string): string {
+  if (status === "IN_STOCK") return "status-in-stock";
+  if (status === "LOW_STOCK") return "status-low-stock";
+  if (status === "OUT_OF_STOCK") return "status-out-of-stock";
+  return "";
+}
+
+function transferStatusClass(status: string): string {
+  if (status === "COMPLETED") return "status-completed";
+  if (status === "PENDING") return "status-pending";
+  if (status === "REJECTED" || status === "CANCELLED") return "status-rejected";
+  if (status === "APPROVED") return "status-approved";
+  return "";
+}
+
+function movementTypeLabel(value: string): string {
+  return value.replaceAll("_", " ").toLowerCase();
+}
+
 function ReportTable({
   kind,
   rows,
@@ -236,46 +255,185 @@ function ReportTable({
   if (kind === "warehouse-inventory") {
     return (
       <table className="activity-table">
-        <thead><tr><th>Warehouse</th><th>Inventory units</th><th>Inventory records</th><th>Products</th><th>Locations</th><th>Low-stock records</th><th>Out-of-stock records</th></tr></thead>
-        <tbody>{rows.map((row) => {
-          const item = row as WarehouseInventoryReportRow;
-          return <tr key={item.warehouse.id}><td>{entityName(item.warehouse)}</td><td>{item.totalInventoryUnits}</td><td>{item.inventoryRecordCount}</td><td>{item.productCount}</td><td>{item.locationCount}</td><td>{item.lowStockRecordCount}</td><td>{item.outOfStockRecordCount}</td></tr>;
-        })}</tbody>
+        <thead>
+          <tr>
+            <th>Warehouse</th>
+            <th>Inventory units</th>
+            <th>Inventory records</th>
+            <th>Products</th>
+            <th>Locations</th>
+            <th>Low-stock records</th>
+            <th>Out-of-stock records</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const item = row as WarehouseInventoryReportRow;
+            return (
+              <tr key={item.warehouse.id}>
+                <td>{entityName(item.warehouse)}</td>
+                <td>{item.totalInventoryUnits.toLocaleString()}</td>
+                <td>{item.inventoryRecordCount.toLocaleString()}</td>
+                <td>{item.productCount.toLocaleString()}</td>
+                <td>{item.locationCount.toLocaleString()}</td>
+                <td>{item.lowStockRecordCount.toLocaleString()}</td>
+                <td>{item.outOfStockRecordCount.toLocaleString()}</td>
+              </tr>
+            );
+          })}
+        </tbody>
       </table>
     );
   }
   if (kind === "inventory" || kind === "low-stock") {
     return (
       <table className="activity-table">
-        <thead><tr><th>Product</th><th>SKU</th><th>Unit</th><th>Category</th><th>Warehouse</th><th>Location</th><th>Quantity</th><th>Minimum stock</th><th>Status</th><th>Updated</th></tr></thead>
-        <tbody>{rows.map((row) => {
-          const item = row as InventoryRecord;
-          return <tr key={item.id}><td>{item.product.name}</td><td>{item.product.sku}</td><td>{item.product.unit}</td><td>{item.category?.name ?? "—"}</td><td>{entityName(item.warehouse)}</td><td>{entityName(item.location)}</td><td>{item.quantity}</td><td>{item.minimumStockLevel}</td><td>{item.stockStatus}</td><td>{dateTime(item.updatedAt)}</td></tr>;
-        })}</tbody>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Unit</th>
+            <th>Category</th>
+            <th>Warehouse</th>
+            <th>Location</th>
+            <th>Quantity</th>
+            <th>Minimum stock</th>
+            <th>Status</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const item = row as InventoryRecord;
+            return (
+              <tr key={item.id}>
+                <td>{item.product.name}</td>
+                <td>{item.product.sku}</td>
+                <td>{item.product.unit}</td>
+                <td>{item.category?.name ?? "—"}</td>
+                <td>{entityName(item.warehouse)}</td>
+                <td>{entityName(item.location)}</td>
+                <td>{item.quantity.toLocaleString()}</td>
+                <td>{item.minimumStockLevel.toLocaleString()}</td>
+                <td>
+                  <span className={`status-badge ${stockStatusClass(item.stockStatus)}`}>
+                    {item.stockStatus.replaceAll("_", " ").toLowerCase()}
+                  </span>
+                </td>
+                <td>{dateTime(item.updatedAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
       </table>
     );
   }
   if (kind === "stock-movements") {
     return (
       <table className="activity-table">
-        <thead><tr><th>Movement</th><th>Product</th><th>Warehouse / location</th><th>Quantity</th><th>Previous quantity</th><th>New quantity</th><th>Reason</th><th>Reference</th><th>Performed by</th><th>Date</th></tr></thead>
-        <tbody>{rows.map((row) => {
-          const item = row as StockMovementRecord;
-          const actor = typeof item.performedBy === "string" ? item.performedBy : [item.performedBy.firstName, item.performedBy.lastName].filter(Boolean).join(" ");
-          return <tr key={item.id}><td>{item.movementType}</td><td>{item.product.name} ({item.product.sku})</td><td>{entityName(item.warehouse)} / {entityName(item.location)}</td><td>{item.quantity}</td><td>{item.previousQuantity}</td><td>{item.newQuantity}</td><td>{item.reason}</td><td>{item.reference || "—"}</td><td>{actor || "—"}</td><td>{dateTime(item.createdAt)}</td></tr>;
-        })}</tbody>
+        <thead>
+          <tr>
+            <th>Movement</th>
+            <th>Product</th>
+            <th>Warehouse / location</th>
+            <th>Quantity</th>
+            <th>Previous quantity</th>
+            <th>New quantity</th>
+            <th>Reason</th>
+            <th>Reference</th>
+            <th>Performed by</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const item = row as StockMovementRecord;
+            const actor =
+              typeof item.performedBy === "string"
+                ? item.performedBy
+                : [item.performedBy.firstName, item.performedBy.lastName].filter(Boolean).join(" ");
+            return (
+              <tr key={item.id}>
+                <td>{movementTypeLabel(item.movementType)}</td>
+                <td>
+                  {item.product.name}
+                  <br />
+                  <span style={{ color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>{item.product.sku}</span>
+                </td>
+                <td>
+                  {entityName(item.warehouse)}
+                  <br />
+                  <span style={{ color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>{entityName(item.location)}</span>
+                </td>
+                <td>{item.quantity.toLocaleString()}</td>
+                <td>{item.previousQuantity.toLocaleString()}</td>
+                <td>{item.newQuantity.toLocaleString()}</td>
+                <td>{item.reason}</td>
+                <td>{item.reference || "—"}</td>
+                <td>{actor || "—"}</td>
+                <td>{dateTime(item.createdAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
       </table>
     );
   }
   return (
     <table className="activity-table">
-      <thead><tr><th>Reference</th><th>Status</th><th>Product</th><th>Quantity</th><th>Source</th><th>Destination</th><th>Initiated by</th><th>Created</th></tr></thead>
-      <tbody>{rows.map((row) => {
-        const item = row as TransferRecord;
-        const product = typeof item.product === "string" ? item.product : `${item.product.name ?? item.product.id}${item.product.sku ? ` (${item.product.sku})` : ""}`;
-        const initiatedBy = typeof item.initiatedBy === "string" ? item.initiatedBy : [item.initiatedBy.firstName, item.initiatedBy.lastName].filter(Boolean).join(" ");
-        return <tr key={item.id}><td>{item.reference}</td><td>{item.status}</td><td>{product}</td><td>{item.quantity}</td><td>{entityName(item.sourceWarehouse)} / {entityName(item.sourceLocation)}</td><td>{entityName(item.destinationWarehouse)} / {entityName(item.destinationLocation)}</td><td>{initiatedBy || "—"}</td><td>{dateTime(item.createdAt)}</td></tr>;
-      })}</tbody>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Status</th>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Source</th>
+          <th>Destination</th>
+          <th>Initiated by</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => {
+          const item = row as TransferRecord;
+          const product =
+            typeof item.product === "string"
+              ? item.product
+              : `${item.product.name ?? item.product.id}${item.product.sku ? ` (${item.product.sku})` : ""}`;
+          const initiatedBy =
+            typeof item.initiatedBy === "string"
+              ? item.initiatedBy
+              : [item.initiatedBy.firstName, item.initiatedBy.lastName].filter(Boolean).join(" ");
+          return (
+            <tr key={item.id}>
+              <td>{item.reference}</td>
+              <td>
+                <span className={`status-badge ${transferStatusClass(item.status)}`}>
+                  {item.status.toLowerCase()}
+                </span>
+              </td>
+              <td>{product}</td>
+              <td>{item.quantity.toLocaleString()}</td>
+              <td>
+                {entityName(item.sourceWarehouse)}
+                <br />
+                <span style={{ color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
+                  {entityName(item.sourceLocation)}
+                </span>
+              </td>
+              <td>
+                {entityName(item.destinationWarehouse)}
+                <br />
+                <span style={{ color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
+                  {entityName(item.destinationLocation)}
+                </span>
+              </td>
+              <td>{initiatedBy || "—"}</td>
+              <td>{dateTime(item.createdAt)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
     </table>
   );
 }
@@ -375,7 +533,7 @@ function ReportView({ kind }: { kind: ReportKind }) {
         </nav>
         <h2 className="report-title">{REPORTS.find((report) => report.kind === kind)?.label}</h2>
 
-        <form className="master-data-filters report-filters" onSubmit={applyFilters}>
+        <form className="report-filters" onSubmit={applyFilters}>
           {fieldsFor(kind).map((field) => (
             <label className="report-filter" key={field.key}>
               {field.label}
@@ -386,7 +544,7 @@ function ReportView({ kind }: { kind: ReportKind }) {
                   onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.value }))}
                 >
                   <option value="">All</option>
-                  {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
+                  {field.options?.map((option) => <option key={option} value={option}>{option.replaceAll("_", " ").toLowerCase()}</option>)}
                 </select>
               ) : (
                 <input
@@ -417,12 +575,28 @@ function ReportView({ kind }: { kind: ReportKind }) {
 
         {kind === "low-stock" && <p className="report-note">Stock status is fixed to LOW_STOCK by the backend.</p>}
         {filterError && <p className="master-data-error" role="alert">{filterError}</p>}
-        {error && <p className="master-data-error" role="alert">{error} <button type="button" onClick={() => setReload((value) => value + 1)}>Retry</button></p>}
+        {error && (
+          <div className="error-state" role="alert">
+            <span>{error}</span>
+            <button type="button" className="btn btn-secondary" onClick={() => setReload((value) => value + 1)}>
+              Retry
+            </button>
+          </div>
+        )}
 
         {loading ? (
-          <p role="status">Loading report...</p>
+          <div className="empty-state" role="status">
+            <p className="empty-state-title">Loading report</p>
+            <p className="empty-state-body">Please wait while we fetch the report data.</p>
+          </div>
         ) : error ? null : rows.length === 0 ? (
-          <p role="status">No report records match the selected filters.</p>
+          <div className="empty-state">
+            <p className="empty-state-title">No records found</p>
+            <p className="empty-state-body">
+              No {REPORTS.find((report) => report.kind === kind)?.label.toLowerCase()} match the selected filters.
+              Try adjusting your criteria or clear filters to see all records.
+            </p>
+          </div>
         ) : (
           <div className="report-table-wrap">
             <ReportTable kind={kind} rows={rows} />
