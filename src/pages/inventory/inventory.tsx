@@ -125,9 +125,9 @@ function recordUpdatedAt(value: string): string {
 }
 
 function inventoryStatusClass(status: InventoryStockStatus): string {
-  if (status === "LOW_STOCK") return "pill-warn";
-  if (status === "OUT_OF_STOCK") return "pill-danger";
-  return "pill-ok";
+  if (status === "LOW_STOCK") return "inventory-status-low";
+  if (status === "OUT_OF_STOCK") return "inventory-status-out";
+  return "inventory-status-in";
 }
 
 function inventoryStatusLabel(status: InventoryStockStatus): string {
@@ -164,6 +164,7 @@ function InventorySearch() {
 
   return (
     <input
+      className="inventory-search-input"
       aria-label="Search inventory"
       placeholder="Search product or SKU"
       value={searchText}
@@ -371,11 +372,33 @@ export default function Inventory() {
       : `/inventory${location.search}`;
 
   return (
-    <div className="dashboard-wrapper">
+    <div
+      className={`dashboard-wrapper inventory-page inventory-page-${view}${inventoryId ? " inventory-detail-page" : ""}`}
+    >
       <AppNavigation activePath="/inventory" showBrand={false} />
-      <main className="main-content">
+      <main className="main-content inventory-content">
         <div className="topbar">
-          <h1>{inventoryId ? "Inventory details" : "Inventory"}</h1>
+          <div className="inventory-heading">
+            <p className="inventory-eyebrow">INVENTORY CONTROL</p>
+            <h1>
+              {inventoryId
+                ? "Inventory details"
+                : view === "low-stock"
+                  ? "Low stock"
+                  : view === "out-of-stock"
+                    ? "Out of stock"
+                    : "Inventory"}
+            </h1>
+            <p>
+              {inventoryId
+                ? "Read-only details for this inventory record."
+                : view === "low-stock"
+                  ? "Review inventory currently classified as low stock."
+                  : view === "out-of-stock"
+                    ? "Review inventory currently classified as out of stock."
+                    : "Review quantities and locations across your permitted warehouses."}
+            </p>
+          </div>
         </div>
 
         <nav className="inventory-tabs" aria-label="Inventory views">
@@ -401,14 +424,17 @@ export default function Inventory() {
 
         {inventoryId ? (
           <>
-            <p>
-              <Link to={backPath}>Back to inventory</Link>
+            <p className="inventory-back-link">
+              <Link to={backPath}>← Back to inventory</Link>
             </p>
             {isLoadingDetail ||
             (!detailError && detailRecord?.id !== inventoryId) ? (
-              <p role="status">Loading inventory details...</p>
+              <div className="inventory-state inventory-loading" role="status">
+                <span className="inventory-spinner" aria-hidden="true" />
+                Loading inventory details...
+              </div>
             ) : detailError ? (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error" role="alert">
                 {detailError}
                 <button
                   type="button"
@@ -418,63 +444,72 @@ export default function Inventory() {
                 </button>
               </p>
             ) : detailRecord ? (
-              <dl className="master-data-details inventory-details">
-                <div>
-                  <dt>Product</dt>
-                  <dd>{detailRecord.product.name}</dd>
+              <>
+                <div className="inventory-detail-heading">
+                  <span className="inventory-detail-icon" aria-hidden="true">
+                    ▦
+                  </span>
+                  <div>
+                    <h2>{detailRecord.product.name}</h2>
+                    <p>
+                      SKU {detailRecord.product.sku}{" "}
+                      <span aria-hidden="true">·</span> {detailRecord.product.unit}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <dt>SKU</dt>
-                  <dd>{detailRecord.product.sku}</dd>
-        </div>
-        <div>
-                  <dt>Product ID</dt>
-                  <dd>{detailRecord.product._id}</dd>
-                </div>
-                <div>
-                  <dt>Unit</dt>
-                  <dd>{detailRecord.product.unit}</dd>
-                </div>
-                <div>
-                  <dt>Category</dt>
-                  <dd>{detailRecord.product.category.name}</dd>
-                </div>
-                <div>
-                  <dt>Warehouse</dt>
-                  <dd>
-                    {detailRecord.warehouse.name} (
-                    {detailRecord.warehouse.code})
-                  </dd>
-                </div>
-                <div>
-                  <dt>Location</dt>
-                  <dd>
-                    {detailRecord.location.name} ({detailRecord.location.code})
-                  </dd>
-                </div>
-                <div>
-                  <dt>Quantity</dt>
-                  <dd>{detailRecord.quantity}</dd>
-                </div>
-                <div>
-                  <dt>Minimum stock</dt>
-                  <dd>{detailRecord.minimumStockLevel}</dd>
-                </div>
-                <div>
-                  <dt>Stock status</dt>
-                  <dd>
-                    <span
-                      className={`pill ${inventoryStatusClass(detailRecord.stockStatus)}`}
-                    >
-                      {inventoryStatusLabel(detailRecord.stockStatus)}
-                    </span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Updated</dt>
-                  <dd>{recordUpdatedAt(detailRecord.updatedAt)}</dd>
-                </div>
-              </dl>
+                <dl className="master-data-details inventory-details">
+                  <div>
+                    <dt>Product</dt>
+                    <dd>{detailRecord.product.name}</dd>
+                  </div>
+                  <div>
+                    <dt>SKU</dt>
+                    <dd>{detailRecord.product.sku}</dd>
+                  </div>
+                  <div>
+                    <dt>Unit</dt>
+                    <dd>{detailRecord.product.unit}</dd>
+                  </div>
+                  <div>
+                    <dt>Category</dt>
+                    <dd>{detailRecord.product.category.name}</dd>
+                  </div>
+                  <div>
+                    <dt>Warehouse</dt>
+                    <dd>
+                      {detailRecord.warehouse.name} ({detailRecord.warehouse.code})
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Location</dt>
+                    <dd>
+                      {detailRecord.location.name} ({detailRecord.location.code})
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Quantity</dt>
+                    <dd>{detailRecord.quantity}</dd>
+                  </div>
+                  <div>
+                    <dt>Minimum stock</dt>
+                    <dd>{detailRecord.minimumStockLevel}</dd>
+                  </div>
+                  <div>
+                    <dt>Stock status</dt>
+                    <dd>
+                      <span
+                        className={`inventory-status-badge ${inventoryStatusClass(detailRecord.stockStatus)}`}
+                      >
+                        {inventoryStatusLabel(detailRecord.stockStatus)}
+                      </span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Updated</dt>
+                    <dd>{recordUpdatedAt(detailRecord.updatedAt)}</dd>
+                  </div>
+                </dl>
+              </>
             ) : null}
           </>
         ) : (
@@ -559,9 +594,9 @@ export default function Inventory() {
                 }
               >
                 <option value="">All stock statuses</option>
-                <option value="IN_STOCK">IN_STOCK</option>
-                <option value="LOW_STOCK">LOW_STOCK</option>
-                <option value="OUT_OF_STOCK">OUT_OF_STOCK</option>
+                <option value="IN_STOCK">In stock</option>
+                <option value="LOW_STOCK">Low stock</option>
+                <option value="OUT_OF_STOCK">Out of stock</option>
               </select>
               <select
                 aria-label="Sort inventory"
@@ -592,7 +627,7 @@ export default function Inventory() {
             </div>
 
             {filterOptionsError && (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error" role="alert">
                 Could not load inventory filter options: {filterOptionsError}
                 <button
                   type="button"
@@ -603,7 +638,7 @@ export default function Inventory() {
               </p>
             )}
             {listError && (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error" role="alert">
                 {listError}
                 <button
                   type="button"
@@ -614,9 +649,16 @@ export default function Inventory() {
               </p>
             )}
             {isLoading ? (
-              <p role="status">Loading inventory...</p>
+              <div className="inventory-state inventory-loading" role="status">
+                <span className="inventory-spinner" aria-hidden="true" />
+                Loading inventory...
+              </div>
             ) : listError ? null : records.length === 0 ? (
               <div className="inventory-empty-state" role="status">
+                <span className="inventory-empty-icon" aria-hidden="true">▦</span>
+                <h2>
+                  {view === "low-stock" ? "No low-stock items" : view === "out-of-stock" ? "No out-of-stock items" : "No inventory found"}
+                </h2>
                 <p>
                   {query.search ||
                   query.product ||
@@ -626,9 +668,9 @@ export default function Inventory() {
                   (view === "all" && query.stockStatus)
                     ? "No inventory matches your current filters."
                     : view === "low-stock"
-                      ? "No low-stock inventory."
+                      ? "No items have been marked low stock by the backend."
                       : view === "out-of-stock"
-                        ? "No out-of-stock inventory."
+                      ? "No items have been marked out of stock by the backend."
                         : "No inventory records found."}
                 </p>
                 {(query.search ||
@@ -656,7 +698,7 @@ export default function Inventory() {
               </div>
             ) : (
               <div className="inventory-table-wrap">
-                <table className="activity-table">
+                <table className="activity-table inventory-data-table">
                   <thead>
                     <tr>
                       <th>Product</th>
@@ -689,7 +731,7 @@ export default function Inventory() {
                         <td>{record.minimumStockLevel}</td>
                         <td>
                           <span
-                            className={`pill ${inventoryStatusClass(record.stockStatus)}`}
+                            className={`inventory-status-badge ${inventoryStatusClass(record.stockStatus)}`}
                           >
                           {inventoryStatusLabel(record.stockStatus)}
                           </span>

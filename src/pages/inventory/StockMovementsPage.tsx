@@ -105,6 +105,10 @@ function actorName(performedBy: StockMovementRecord["performedBy"]): string {
     : `${performedBy.firstName} ${performedBy.lastName}`;
 }
 
+function movementTypeLabel(type: StockMovementType): string {
+  return type.replaceAll("_", " ");
+}
+
 export default function StockMovementsPage() {
   const { movementId } = useParams();
   const location = useLocation();
@@ -249,11 +253,15 @@ export default function StockMovementsPage() {
     `/stock-movements${location.search}`;
 
   return (
-    <div className="dashboard-wrapper">
+    <div className={`dashboard-wrapper stock-movements-page${movementId ? " movement-detail-page" : ""}`}>
       <AppNavigation activePath="/stock-movements" showBrand={false} />
-      <main className="main-content">
+      <main className="main-content stock-movements-content">
         <div className="topbar">
-          <h1>{movementId ? "Movement details" : "Stock Movement History"}</h1>
+          <div className="movement-heading">
+            <p className="inventory-eyebrow">INVENTORY CONTROL</p>
+            <h1>{movementId ? "Movement details" : "Stock movement history"}</h1>
+            <p>{movementId ? "Audit details for this recorded stock movement." : "Review stock changes, their location, and the user who recorded them."}</p>
+          </div>
           <Link to="/stock-operations">Stock operations</Link>
         </div>
         <nav className="inventory-tabs" aria-label="Stock movement navigation">
@@ -265,36 +273,48 @@ export default function StockMovementsPage() {
         </nav>
         {movementId ? (
           <>
-            <p><Link to={backPath}>Back to movement history</Link></p>
+            <p className="inventory-back-link"><Link to={backPath}>← Back to movement history</Link></p>
             {detailLoading || (!detailError && detail?.id !== movementId) ? (
-              <p role="status">Loading movement details...</p>
+              <div className="inventory-state inventory-loading" role="status">
+                <span className="inventory-spinner" aria-hidden="true" />
+                Loading movement details...
+              </div>
             ) : detailError ? (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error" role="alert">
                 {detailError}{" "}
                 <button type="button" onClick={() => setRetry((value) => value + 1)}>
                   Retry
                 </button>
               </p>
             ) : detail ? (
-              <dl className="master-data-details inventory-details">
-                <div><dt>Movement type</dt><dd>{detail.movementType}</dd></div>
-                <div><dt>Product</dt><dd>{detail.product.name} ({detail.product.sku})</dd></div>
-                <div><dt>Warehouse</dt><dd>{detail.warehouse.name} ({detail.warehouse.code})</dd></div>
-                <div><dt>Location</dt><dd>{detail.location.name} ({detail.location.code})</dd></div>
-                <div><dt>Quantity</dt><dd>{detail.quantity} {detail.product.unit}</dd></div>
-                <div><dt>Previous quantity</dt><dd>{detail.previousQuantity}</dd></div>
-                <div><dt>New quantity</dt><dd>{detail.newQuantity}</dd></div>
-                <div><dt>Reason</dt><dd>{detail.reason}</dd></div>
-                <div><dt>Reference</dt><dd>{detail.reference || "—"}</dd></div>
-                <div><dt>Notes</dt><dd>{detail.notes || "—"}</dd></div>
-                <div><dt>Performed by</dt><dd>{actorName(detail.performedBy)}</dd></div>
-                <div><dt>Created</dt><dd>{asDateTime(detail.createdAt)}</dd></div>
-              </dl>
+              <section className="movement-detail-card" aria-label="Movement audit details">
+                <div className="movement-detail-banner">
+                  <span className={`movement-type-badge movement-type-${detail.movementType.toLowerCase().replaceAll("_", "-")}`}>
+                    {movementTypeLabel(detail.movementType)}
+                  </span>
+                  <div>
+                    <h2>{detail.product.name}</h2>
+                    <p>SKU {detail.product.sku} <span aria-hidden="true">·</span> {detail.product.unit}</p>
+                  </div>
+                </div>
+                <dl className="master-data-details inventory-details movement-details">
+                  <div><dt>Warehouse</dt><dd>{detail.warehouse.name} ({detail.warehouse.code})</dd></div>
+                  <div><dt>Location</dt><dd>{detail.location.name} ({detail.location.code})</dd></div>
+                  <div className="movement-detail-quantity"><dt>Movement quantity</dt><dd>{detail.quantity} {detail.product.unit}</dd></div>
+                  <div><dt>Previous quantity</dt><dd>{detail.previousQuantity}</dd></div>
+                  <div><dt>New quantity</dt><dd>{detail.newQuantity}</dd></div>
+                  <div><dt>Reason</dt><dd>{detail.reason}</dd></div>
+                  <div><dt>Reference</dt><dd>{detail.reference || "—"}</dd></div>
+                  <div><dt>Notes</dt><dd>{detail.notes || "—"}</dd></div>
+                  <div><dt>Performed by</dt><dd>{actorName(detail.performedBy)}</dd></div>
+                  <div><dt>Created</dt><dd>{asDateTime(detail.createdAt)}</dd></div>
+                </dl>
+              </section>
             ) : null}
           </>
         ) : (
           <>
-            <div className="master-data-filters inventory-filters">
+            <div className="master-data-filters inventory-filters movement-filters">
               <select
                 aria-label="Product"
                 value={query.product ?? ""}
@@ -333,7 +353,7 @@ export default function StockMovementsPage() {
                 onChange={(event) => updateFilter("type", event.target.value)}
               >
                 <option value="">All movement types</option>
-                {MOVEMENT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                {MOVEMENT_TYPES.map((type) => <option key={type} value={type}>{movementTypeLabel(type)}</option>)}
               </select>
               <input
                 aria-label="Performed by user ID"
@@ -387,26 +407,29 @@ export default function StockMovementsPage() {
               </select>
             </div>
             {optionsError && (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error" role="alert">
                 Could not load filter options: {optionsError}{" "}
                 <button type="button" onClick={() => setRetry((value) => value + 1)}>Retry</button>
               </p>
             )}
             {error && (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error" role="alert">
                 {error}{" "}
                 <button type="button" onClick={() => setRetry((value) => value + 1)}>Retry</button>
               </p>
             )}
             {isLoading ? (
-              <p role="status">Loading movement history...</p>
+              <div className="inventory-state inventory-loading" role="status">
+                <span className="inventory-spinner" aria-hidden="true" />
+                Loading movement history...
+              </div>
             ) : error ? null : records.length === 0 ? (
               <p className="inventory-empty-state" role="status">
                 No stock movements match the selected filters.
               </p>
             ) : (
               <div className="inventory-table-wrap">
-                <table className="activity-table">
+                <table className="activity-table movement-data-table">
                   <thead>
                     <tr>
                       <th>Movement type</th><th>Product</th><th>Quantity</th>
@@ -418,7 +441,11 @@ export default function StockMovementsPage() {
                   <tbody>
                     {records.map((movement) => (
                       <tr key={movement.id}>
-                        <td>{movement.movementType}</td>
+                        <td>
+                          <span className={`movement-type-badge movement-type-${movement.movementType.toLowerCase().replaceAll("_", "-")}`}>
+                            {movementTypeLabel(movement.movementType)}
+                          </span>
+                        </td>
                         <td>{movement.product.name} ({movement.product.sku})</td>
                         <td>{movement.quantity} {movement.product.unit}</td>
                         <td>{movement.previousQuantity}</td>

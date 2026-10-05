@@ -442,14 +442,18 @@ export default function StockOperationsPage() {
   const isLocked = Boolean(attempt) || isSubmitting;
 
   return (
-    <div className="dashboard-wrapper">
+    <div className={`dashboard-wrapper stock-operations-page stock-operation-${kind}`}>
       <AppNavigation activePath="/stock-operations" showBrand={false} />
-      <main className="main-content">
+      <main className="main-content stock-operations-content">
         <div className="topbar">
-          <h1>Stock Operations</h1>
+          <div className="stock-operations-heading">
+            <p className="inventory-eyebrow">INVENTORY CONTROL</p>
+            <h1>Stock Operations</h1>
+            <p>Create an auditable stock movement for a permitted warehouse location.</p>
+          </div>
           <Link to="/stock-movements">Movement history</Link>
         </div>
-        <nav className="inventory-tabs" aria-label="Stock operation types">
+        <nav className="inventory-tabs operation-tabs" aria-label="Stock operation types">
           {(["stock-in", "stock-out", ...(mayAdjust ? ["adjust" as const] : [])] as const).map((operation) => (
             <button
               key={operation}
@@ -470,9 +474,16 @@ export default function StockOperationsPage() {
             </button>
           ))}
         </nav>
+        <p className="operation-description">
+          {kind === "stock-in"
+            ? "Record stock received into a selected location."
+            : kind === "stock-out"
+              ? "Record stock removed from a selected location. Available stock is validated before completion."
+              : "Set the target quantity for the selected inventory record. The movement direction is determined automatically."}
+        </p>
 
         {optionsError && (
-          <p className="master-data-error" role="alert">
+          <p className="master-data-error inventory-error" role="alert">
             {optionsError}{" "}
             <button type="button" onClick={() => setOptionsRetry((value) => value + 1)}>
               Retry
@@ -480,16 +491,28 @@ export default function StockOperationsPage() {
           </p>
         )}
         {isLoadingOptions ? (
-          <p role="status">Loading products and permitted warehouses...</p>
+          <div className="inventory-state inventory-loading" role="status">
+            <span className="inventory-spinner" aria-hidden="true" />
+            Loading products and permitted warehouses...
+          </div>
         ) : (
           <form
             ref={formRef}
-            className="warehouse-form stock-operation-form"
+            className={`warehouse-form stock-operation-form operation-form operation-form-${kind}`}
             onSubmit={handleSubmit}
           >
-            <h2>{OPERATION_LABELS[kind]}</h2>
+            <div className="operation-form-heading">
+              <div>
+                <p className="inventory-eyebrow">NEW MOVEMENT</p>
+                <h2>{OPERATION_LABELS[kind]}</h2>
+              </div>
+              <span className={`operation-type-mark operation-type-${kind}`} aria-hidden="true">
+                {kind === "stock-in" ? "+" : kind === "stock-out" ? "−" : "↔"}
+              </span>
+            </div>
+            <div className="operation-fields">
             <label className="master-data-field">
-              Product
+              <span>Product <span className="operation-required">*</span></span>
               <select
                 value={productId}
                 onChange={(event) => {
@@ -514,7 +537,7 @@ export default function StockOperationsPage() {
               </select>
             </label>
             <label className="master-data-field">
-              Warehouse
+              <span>Warehouse <span className="operation-required">*</span></span>
               <select
                 value={warehouseId}
                 onChange={(event) => {
@@ -537,7 +560,7 @@ export default function StockOperationsPage() {
               </select>
             </label>
             <label className="master-data-field">
-              Location
+              <span>Location <span className="operation-required">*</span></span>
               <select
                 value={locationId}
                 onChange={(event) => {
@@ -562,17 +585,25 @@ export default function StockOperationsPage() {
               </select>
             </label>
             {currentError && (
-              <p className="master-data-error" role="alert">{currentError}</p>
+              <p className="master-data-error inventory-error operation-field-wide" role="alert">{currentError}</p>
             )}
-            {isLoadingCurrent && <p role="status">Loading current quantity...</p>}
-            {currentQuantity !== null && (
-              <p role="status">
-                Current quantity: {currentQuantity}{" "}
-                {products.find((product) => product._id === productId)?.unit}
+            {isLoadingCurrent && (
+              <p className="current-quantity-state operation-field-wide" role="status">
+                <span className="inventory-spinner" aria-hidden="true" />
+                Loading current quantity...
               </p>
             )}
-            <label className="master-data-field">
-              {kind === "adjust" ? "New quantity" : "Quantity"}
+            {currentQuantity !== null && (
+              <p className="current-quantity-state operation-field-wide" role="status">
+                <span>Current quantity</span>
+                <strong>
+                  {currentQuantity}{" "}
+                  {products.find((product) => product._id === productId)?.unit}
+                </strong>
+              </p>
+            )}
+            <label className={`master-data-field operation-quantity-field${kind === "stock-out" ? " quantity-stock-out" : ""}`}>
+              <span>{kind === "adjust" ? "New quantity" : kind === "stock-out" ? "Quantity to remove" : "Quantity to add"} <span className="operation-required">*</span></span>
               <input
                 name={kind === "adjust" ? "newQuantity" : "quantity"}
                 type="number"
@@ -588,7 +619,7 @@ export default function StockOperationsPage() {
               />
             </label>
             <label className="master-data-field">
-              Reason
+              <span>Reason <span className="operation-required">*</span></span>
               <input
                 name="reason"
                 type="text"
@@ -598,7 +629,7 @@ export default function StockOperationsPage() {
               />
             </label>
             <label className="master-data-field">
-              Reference (optional)
+              <span>Reference <small>Optional</small></span>
               <input
                 name="reference"
                 type="text"
@@ -607,7 +638,7 @@ export default function StockOperationsPage() {
               />
             </label>
             <label className="master-data-field">
-              Notes (optional)
+              <span>Notes <small>Optional</small></span>
               <textarea
                 name="notes"
                 maxLength={1000}
@@ -615,12 +646,12 @@ export default function StockOperationsPage() {
               />
             </label>
             {operationErrorText && (
-              <p className="master-data-error" role="alert">
+              <p className="master-data-error inventory-error operation-field-wide" role="alert">
                 {operationErrorText}
               </p>
             )}
             {success && (
-              <p role="status" className="stock-operation-success">
+              <p role="status" className="stock-operation-success operation-field-wide">
                 {success.message}{" "}
                 <Link to={`/stock-movements/${encodeURIComponent(success.movementId)}`}>
                   View movement
@@ -628,13 +659,13 @@ export default function StockOperationsPage() {
               </p>
             )}
             {attempt && (
-              <p role="status">
+              <p role="status" className="operation-attempt-notice operation-field-wide">
                 The operation is retained with its original idempotency key.
               </p>
             )}
             <div className="master-data-actions">
               {attempt ? expiredAttempt ? (
-                <p role="alert">
+                <p role="alert" className="operation-expired-notice operation-field-wide">
                   This operation's 24-hour idempotency window has expired. Do not resubmit it with a new key; verify its result in movement history first.
                   {" "}
                   <Link to={`/stock-movements?reference=${encodeURIComponent(attempt.body.reference ?? "")}`}>
@@ -667,6 +698,7 @@ export default function StockOperationsPage() {
                   {isSubmitting ? "Submitting..." : `Confirm ${OPERATION_LABELS[kind]}`}
                 </button>
               )}
+            </div>
             </div>
           </form>
         )}
