@@ -30,11 +30,47 @@ function formatDate(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
-function StatCard({ value, label }: { value: number; label: string }) {
+function MetricIcon({ kind }: { kind: string }) {
+  const iconProps = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const,
+  };
+  if (kind === "warehouses") {
+    return <svg {...iconProps}><path d="m3 10 9-6 9 6v10H3V10Z" /><path d="M8 20v-6h8v6M7 10h.01M12 10h.01M17 10h.01" /></svg>;
+  }
+  if (kind === "products") {
+    return <svg {...iconProps}><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.2V21" /></svg>;
+  }
+  if (kind === "stock") {
+    return <svg {...iconProps}><path d="M4 6h16M4 12h16M4 18h16" /><circle cx="8" cy="6" r="1.5" fill="currentColor" /><circle cx="15" cy="12" r="1.5" fill="currentColor" /><circle cx="10" cy="18" r="1.5" fill="currentColor" /></svg>;
+  }
+  if (kind === "transfers") {
+    return <svg {...iconProps}><path d="M4 7h14l-3-3M20 17H6l3 3M18 7l-3 3M6 17l3-3" /></svg>;
+  }
+  return <svg {...iconProps}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>;
+}
+
+function StatCard({
+  value,
+  label,
+  kind,
+}: {
+  value: number;
+  label: string;
+  kind: string;
+}) {
   return (
     <div className="stat-card">
-      <b>{value.toLocaleString()}</b>
-      <span>{label}</span>
+      <span className={`stat-icon stat-icon-${kind}`}><MetricIcon kind={kind} /></span>
+      <div>
+        <span className="stat-label">{label}</span>
+        <b>{value.toLocaleString()}</b>
+      </div>
     </div>
   );
 }
@@ -80,11 +116,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-wrapper">
+    <div className="dashboard-wrapper dashboard-page">
       <AppNavigation activePath="/dashboard" />
-      <main className="main-content">
+      <main className="main-content dashboard-content">
         <div className="topbar">
-          <h1>Dashboard</h1>
+          <div className="dashboard-heading">
+            <p className="dashboard-eyebrow">OVERVIEW</p>
+            <h1>Dashboard</h1>
+            <p className="dashboard-description">A live view of your warehouse operations.</p>
+          </div>
           <div className="dashboard-controls">
             {summary && <span className="role-badge">{summary.role}</span>}
             <button type="button" onClick={refresh} disabled={loading}>
@@ -93,7 +133,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {loading && <p role="status">Loading dashboard summary...</p>}
+        {loading && (
+          <div className="dashboard-loading" role="status">
+            <span className="dashboard-spinner" aria-hidden="true" />
+            Loading dashboard summary...
+          </div>
+        )}
         {error && (
           <div className="dashboard-error" role="alert">
             <p>{error}</p>
@@ -106,13 +151,13 @@ export default function Dashboard() {
         {summary && !loading && (
           <>
             <div className="stat-row">
-              <StatCard value={summary.totals.warehouses} label="Warehouses" />
-              <StatCard value={summary.totals.locations} label="Locations" />
-              <StatCard value={summary.totals.activeProducts} label="Active products" />
-              <StatCard value={summary.totals.inventoryUnits} label="Inventory units" />
-              <StatCard value={summary.totals.lowStockProducts} label="Low-stock products" />
-              <StatCard value={summary.totals.outOfStockProducts} label="Out-of-stock products" />
-              <StatCard value={summary.totals.pendingTransfers} label="Pending transfers" />
+              <StatCard value={summary.totals.warehouses} label="Warehouses" kind="warehouses" />
+              <StatCard value={summary.totals.locations} label="Locations" kind="locations" />
+              <StatCard value={summary.totals.activeProducts} label="Active products" kind="products" />
+              <StatCard value={summary.totals.inventoryUnits} label="Inventory units" kind="stock" />
+              <StatCard value={summary.totals.lowStockProducts} label="Low-stock products" kind="low" />
+              <StatCard value={summary.totals.outOfStockProducts} label="Out-of-stock products" kind="out" />
+              <StatCard value={summary.totals.pendingTransfers} label="Pending transfers" kind="transfers" />
             </div>
 
             <section className="dashboard-section">
@@ -135,7 +180,7 @@ export default function Dashboard() {
                   <tbody>
                     {summary.recentStockMovements.map((movement) => (
                       <tr key={movement.id}>
-                        <td>{movement.movementType}</td>
+                        <td><span className={`activity-type activity-type-${movement.movementType.toLowerCase().replaceAll("_", "-")}`}>{movement.movementType.replaceAll("_", " ")}</span></td>
                         <td>
                           {entityName(movement.product)}
                           {movement.product.sku ? ` (${movement.product.sku})` : ""}
@@ -179,7 +224,7 @@ export default function Dashboard() {
                         <td>{transfer.quantity}</td>
                         <td>{entityName(transfer.sourceWarehouse)} / {entityName(transfer.sourceLocation)}</td>
                         <td>{entityName(transfer.destinationWarehouse)} / {entityName(transfer.destinationLocation)}</td>
-                        <td>{transfer.status}</td>
+                        <td><span className={`status-badge status-${transfer.status.toLowerCase()}`}>{transfer.status}</span></td>
                         <td>{formatDate(transfer.createdAt)}</td>
                       </tr>
                     ))}

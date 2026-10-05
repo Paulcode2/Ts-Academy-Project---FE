@@ -369,11 +369,36 @@ export default function MasterDataPage<
     }, 300);
   }
 
+  function clearFilters(): void {
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+      searchTimer.current = null;
+    }
+    setSearchText("");
+    setFilters((current) => ({
+      ...current,
+      page: 1,
+      search: "",
+      status: "all",
+      ...Object.fromEntries(
+        (config.filters ?? []).map((field) => [field.name, undefined]),
+      ),
+    }));
+  }
+
+  const hasActiveFilters =
+    Boolean(filters.search) ||
+    filters.status !== "all" ||
+    (config.filters ?? []).some((field) => filters[field.name] !== undefined);
+
   const detailContent = detailRecord && (
-    <section className="warehouse-form" aria-label={`${config.title} details`}>
+    <section className="master-data-detail-panel" aria-label={`${config.title} details`}>
       <div className="master-data-form-heading">
-        <h2>{config.title} details</h2>
-        <button type="button" onClick={() => setDetailRecord(null)}>
+        <div>
+          <p className="master-data-eyebrow">RECORD OVERVIEW</p>
+          <h2>{config.singular} details</h2>
+        </div>
+        <button type="button" aria-label={`Close ${config.singular.toLowerCase()} details`} onClick={() => setDetailRecord(null)}>
           Close
         </button>
       </div>
@@ -386,7 +411,11 @@ export default function MasterDataPage<
         ))}
         <div>
           <dt>Status</dt>
-          <dd>{detailRecord.isActive ? "Active" : "Inactive"}</dd>
+          <dd>
+            <span className={`status-badge ${detailRecord.isActive ? "status-active" : "status-inactive"}`}>
+              {detailRecord.isActive ? "Active" : "Inactive"}
+            </span>
+          </dd>
         </div>
       </dl>
       {canMutate && (
@@ -401,22 +430,33 @@ export default function MasterDataPage<
   );
 
   return (
-    <div className="dashboard-wrapper">
+    <div className="dashboard-wrapper master-data-page">
       <AppNavigation activePath={config.path} />
-      <main className="main-content">
+      <main className="main-content master-data-content">
         <div className="topbar">
-          <h1>{config.title}</h1>
+          <div>
+            <p className="master-data-eyebrow">MASTER DATA</p>
+            <h1>{config.title}</h1>
+            <p className="master-data-description">
+              Manage the {config.title.toLowerCase()} available in your workspace.
+            </p>
+          </div>
           {canMutate && (
-            <button className="add-warehouse-btn" onClick={startCreate}>
+            <button className="add-warehouse-btn" type="button" onClick={startCreate}>
               + Add {config.singular}
             </button>
           )}
         </div>
 
         {detailContent}
-        {isLoadingDetail && <p role="status">Loading record details...</p>}
+        {isLoadingDetail && (
+          <div className="ui-state ui-state-loading" role="status">
+            <span className="state-spinner" aria-hidden="true" />
+            Loading record details...
+          </div>
+        )}
         {detailError && (
-          <p className="master-data-error" role="alert">
+          <p className="ui-alert ui-alert-error" role="alert">
             {detailError}
             <button
               type="button"
@@ -428,16 +468,29 @@ export default function MasterDataPage<
             </button>
           </p>
         )}
-        {successMessage && <p role="status">{successMessage}</p>}
+        {successMessage && <p className="ui-alert ui-alert-success" role="status">{successMessage}</p>}
 
         {isFormOpen && (
-          <form className="warehouse-form" onSubmit={submitForm}>
-            <h2>
-              {editingId ? `Edit ${config.singular}` : `Add ${config.singular}`}
-            </h2>
+          <form className="master-data-form-panel" onSubmit={submitForm}>
+            <div className="master-data-form-title">
+              <div>
+                <p className="master-data-eyebrow">{editingId ? "UPDATE RECORD" : "NEW RECORD"}</p>
+                <h2>{editingId ? `Edit ${config.singular}` : `Add ${config.singular}`}</h2>
+              </div>
+              <button
+                className="form-dismiss"
+                type="button"
+                aria-label={`Close ${config.singular.toLowerCase()} form`}
+                onClick={() => setIsFormOpen(false)}
+                disabled={isSaving}
+              >
+                ×
+              </button>
+            </div>
+            <div className="master-data-fields">
             {config.fields.map((field) => (
-              <label key={field.name} className="master-data-field">
-                {field.label}
+              <label key={field.name} className={`master-data-field${field.required ? " is-required" : ""}`}>
+                <span>{field.label}{field.required && <span className="required-indicator" aria-hidden="true"> *</span>}</span>
                 {field.type === "textarea" ? (
                   <textarea
                     name={field.name}
@@ -449,6 +502,7 @@ export default function MasterDataPage<
                       }))
                     }
                     required={field.required}
+                    disabled={isLoadingForm || isSaving}
                   />
                 ) : field.type === "select" ? (
                   <select
@@ -461,7 +515,7 @@ export default function MasterDataPage<
                       }))
                     }
                     required={field.required}
-                    disabled={isLoadingForm}
+                    disabled={isLoadingForm || isSaving}
                   >
                     <option value="">Select {field.label.toLowerCase()}</option>
                     {(fieldOptions[field.name] ?? []).map((option) => (
@@ -483,17 +537,19 @@ export default function MasterDataPage<
                     }
                     required={field.required}
                     min={field.min}
+                    disabled={isLoadingForm || isSaving}
                   />
                 )}
               </label>
             ))}
+            </div>
             {formError && (
-              <p className="master-data-error" role="alert">
+              <p className="ui-alert ui-alert-error" role="alert">
                 {formError}
               </p>
             )}
             <div className="master-data-actions">
-              <button type="submit" disabled={isSaving || isLoadingForm}>
+              <button className="button-primary" type="submit" disabled={isSaving || isLoadingForm}>
                 {isSaving ? "Saving..." : editingId ? "Save changes" : "Create"}
               </button>
               <button
@@ -508,12 +564,16 @@ export default function MasterDataPage<
         )}
 
         <div className="master-data-filters">
-          <input
-            aria-label={`Search ${config.title.toLowerCase()}`}
-            placeholder="Search"
-            value={searchText}
-            onChange={(event) => updateSearch(event.target.value)}
-          />
+          <div className="master-data-search">
+            <label htmlFor="master-data-search">Search {config.title.toLowerCase()}</label>
+            <input
+              id="master-data-search"
+              aria-label={`Search ${config.title.toLowerCase()}`}
+              placeholder={`Search ${config.title.toLowerCase()}`}
+              value={searchText}
+              onChange={(event) => updateSearch(event.target.value)}
+            />
+          </div>
           <select
             aria-label="Status filter"
             value={filters.status ?? "all"}
@@ -575,10 +635,15 @@ export default function MasterDataPage<
               )}
             </select>
           ))}
+          {hasActiveFilters && (
+            <button className="button-quiet" type="button" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
         </div>
 
         {filterError && (
-          <p className="master-data-error" role="alert">
+          <p className="ui-alert ui-alert-error" role="alert">
             {filterError}
             <button
               type="button"
@@ -589,7 +654,7 @@ export default function MasterDataPage<
           </p>
         )}
         {listError && (
-          <p className="master-data-error" role="alert">
+          <p className="ui-alert ui-alert-error" role="alert">
             {listError}
             <button
               type="button"
@@ -603,17 +668,25 @@ export default function MasterDataPage<
           </p>
         )}
         {isLoading ? (
-          <p role="status">Loading {config.title.toLowerCase()}...</p>
+          <div className="ui-state ui-state-loading" role="status">
+            <span className="state-spinner" aria-hidden="true" />
+            Loading {config.title.toLowerCase()}...
+          </div>
         ) : listError ? null : records.length === 0 ? (
-          <p role="status">
-            {filters.search ||
+          <div className="ui-state ui-state-empty" role="status">
+            <span className="empty-state-icon" aria-hidden="true">○</span>
+            <h2>No {config.title.toLowerCase()} found</h2>
+            <p>
+              {filters.search ||
             filters.status !== "all" ||
             config.filters?.some((field) => filters[field.name] !== undefined)
-              ? `No ${config.title.toLowerCase()} match these filters.`
-              : `No ${config.title.toLowerCase()} exist yet.`}
-          </p>
+                ? `No ${config.title.toLowerCase()} match the current filters.`
+                : `There are no ${config.title.toLowerCase()} to display yet.`}
+            </p>
+          </div>
         ) : (
-          <table className="activity-table">
+          <div className="master-data-table-wrap">
+          <table className="activity-table master-data-table">
             <thead>
               <tr>
                 {config.columns.map((column) => (
@@ -631,7 +704,7 @@ export default function MasterDataPage<
                   ))}
                   <td>
                     <span
-                      className={`pill ${record.isActive ? "pill-ok" : "pill-danger"}`}
+                      className={`status-badge ${record.isActive ? "status-active" : "status-inactive"}`}
                     >
                       {record.isActive ? "Active" : "Inactive"}
                     </span>
@@ -639,6 +712,7 @@ export default function MasterDataPage<
                   <td className="master-data-row-actions">
                     <button
                       type="button"
+                      className="table-action"
                       onClick={() => void startDetail(record._id)}
                     >
                       View
@@ -647,12 +721,14 @@ export default function MasterDataPage<
                       <>
                         <button
                           type="button"
+                          className="table-action"
                           onClick={() => void startDetail(record._id, true)}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
+                          className={`table-action ${record.isActive ? "table-action-danger" : ""}`}
                           onClick={() => void toggleStatus(record)}
                           disabled={busyRecordId === record._id}
                         >
@@ -669,6 +745,7 @@ export default function MasterDataPage<
               ))}
             </tbody>
           </table>
+          </div>
         )}
 
         <div className="master-data-pagination">
