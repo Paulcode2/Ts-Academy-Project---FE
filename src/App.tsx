@@ -9,6 +9,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import Locations from "./pages/locations/locations";
 import Categories from "./pages/categories/categories";
 import Products from "./pages/products/products";
+import Inventory from "./pages/inventory/inventory";
 
 function App() {
   return (
@@ -44,6 +45,38 @@ function App() {
         element={
           <ProtectedRoute>
             <Products />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory"
+        element={
+          <ProtectedRoute>
+            <Inventory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory/low-stock"
+        element={
+          <ProtectedRoute>
+            <Inventory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory/out-of-stock"
+        element={
+          <ProtectedRoute>
+            <Inventory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory/:inventoryId"
+        element={
+          <ProtectedRoute>
+            <Inventory />
           </ProtectedRoute>
         }
       />

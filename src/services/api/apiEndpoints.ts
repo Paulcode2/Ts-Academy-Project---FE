@@ -13,6 +13,11 @@ export const API_ENDPOINTS = {
     categories: "/categories",
     products: "/products",
   },
+  inventory: {
+    list: "/inventory",
+    lowStock: "/inventory/low-stock",
+    outOfStock: "/inventory/out-of-stock",
+  },
   users: {
     list: "/users",
   },
