@@ -2,6 +2,26 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Deploying to Vercel
+
+Deploy from the repository root, where `package.json` and `vercel.json` live.
+The Vercel configuration selects Vite, runs `npm run build`, and serves `dist`.
+Its rewrite sends page requests to `index.html` so React Router can handle direct
+links and refreshes, including nested routes such as `/inventory/low-stock`.
+
+If a refresh still shows Vercel's `404 NOT_FOUND` page:
+
+1. Confirm that Vercel's Root Directory points to the repository root, not `src`
+   or `dist`.
+2. Commit and push `vercel.json` to the branch used by the deployment. If the fix
+   is on `userAuth` but production deploys `main`, merge it into `main` first.
+3. Deploy the latest commit containing the configuration. Redeploying an older
+   deployment uses that older source and will not pick up the fix.
+4. Open `/login` directly on the new deployment URL and refresh it. Then, while
+   signed in, refresh `/dashboard` and `/inventory/low-stock`.
+
+See [Vercel's Vite SPA documentation](https://vercel.com/docs/frameworks/frontend/vite#using-vite-to-make-spas).
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
