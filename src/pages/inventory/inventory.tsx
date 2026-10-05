@@ -8,6 +8,7 @@ import { warehouseService } from "../../services/masterData/warehouseService";
 import {
   inventoryService,
   isInventoryStockStatus,
+  STOCK_DATA_UPDATED_EVENT,
   type InventoryListView,
 } from "../../services/inventory/inventoryService";
 import type { Pagination } from "../../types/api";
@@ -234,8 +235,11 @@ export default function Inventory() {
       .finally(() => {
         if (current) setIsLoading(false);
       });
+    const refresh = () => setRetryCount((count) => count + 1);
+    window.addEventListener(STOCK_DATA_UPDATED_EVENT, refresh);
     return () => {
       current = false;
+      window.removeEventListener(STOCK_DATA_UPDATED_EVENT, refresh);
     };
   }, [inventoryId, query, retryCount, searchString, setSearchParams, view]);
 
@@ -261,8 +265,11 @@ export default function Inventory() {
       .finally(() => {
         if (current) setIsLoadingDetail(false);
       });
+    const refresh = () => setRetryCount((count) => count + 1);
+    window.addEventListener(STOCK_DATA_UPDATED_EVENT, refresh);
     return () => {
       current = false;
+      window.removeEventListener(STOCK_DATA_UPDATED_EVENT, refresh);
     };
   }, [inventoryId, retryCount]);
 

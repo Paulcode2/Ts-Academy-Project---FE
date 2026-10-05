@@ -10,6 +10,8 @@ import Locations from "./pages/locations/locations";
 import Categories from "./pages/categories/categories";
 import Products from "./pages/products/products";
 import Inventory from "./pages/inventory/inventory";
+import StockOperationsPage from "./pages/inventory/StockOperationsPage";
+import StockMovementsPage from "./pages/inventory/StockMovementsPage";
 
 function App() {
   return (
@@ -77,6 +79,54 @@ function App() {
         element={
           <ProtectedRoute>
             <Inventory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock-operations"
+        element={
+          <ProtectedRoute>
+            <StockOperationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock-operations/stock-in"
+        element={
+          <ProtectedRoute>
+            <StockOperationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock-operations/stock-out"
+        element={
+          <ProtectedRoute>
+            <StockOperationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock-operations/adjust"
+        element={
+          <ProtectedRoute>
+            <StockOperationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock-movements"
+        element={
+          <ProtectedRoute>
+            <StockMovementsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock-movements/:movementId"
+        element={
+          <ProtectedRoute>
+            <StockMovementsPage />
           </ProtectedRoute>
         }
       />

@@ -23,6 +23,28 @@
   font-weight: 600;
 }
 
+.inventory-tabs button {
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #5c6470;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.inventory-tabs button[aria-pressed="true"] {
+  border-bottom-color: #2f6fed;
+  color: #2f6fed;
+  font-weight: 600;
+}
+
+.inventory-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .inventory-filters select {
   max-width: 100%;
 }
@@ -38,6 +60,25 @@
 
 .inventory-details {
   margin-top: 1rem;
+}
+
+.stock-operation-form {
+  max-width: 44rem;
+  margin-top: 1rem;
+}
+
+.stock-operation-form .master-data-field {
+  width: 100%;
+}
+
+.stock-operation-form .master-data-field input,
+.stock-operation-form .master-data-field select,
+.stock-operation-form .master-data-field textarea {
+  width: 100%;
+}
+
+.stock-operation-success {
+  color: #1a9c5c;
 }
 
 @media (max-width: 768px) {
