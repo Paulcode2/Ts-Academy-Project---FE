@@ -1,0 +1,47 @@
+.inventory-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e3e6ea;
+}
+
+.inventory-tabs a {
+  padding: 0.5rem 0.7rem;
+  color: #5c6470;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.inventory-tabs a:hover {
+  color: #2f6fed;
+}
+
+.inventory-tabs a[aria-current="page"] {
+  border-bottom: 2px solid #2f6fed;
+  color: #2f6fed;
+  font-weight: 600;
+}
+
+.inventory-filters select {
+  max-width: 100%;
+}
+
+.inventory-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.inventory-table-wrap .activity-table {
+  min-width: 1050px;
+}
+
+.inventory-details {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .inventory-filters > * {
+    flex: 1 1 100%;
+  }
+}

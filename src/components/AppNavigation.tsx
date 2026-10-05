@@ -13,6 +13,7 @@ const navigationItems = [
   { to: "/locations", label: "Locations", permission: "locations:read" },
   { to: "/categories", label: "Categories", permission: "categories:read" },
   { to: "/products", label: "Products", permission: "products:read" },
+  { to: "/inventory", label: "Inventory", permission: "warehouses:read" },
   { to: "/users", label: "Users", permission: "users:manage" },
 ] as const;
 
@@ -34,7 +35,10 @@ export default function AppNavigation({
               key={item.to}
               to={item.to}
               className={
-                location.pathname === item.to && activePath === item.to
+                (location.pathname === item.to ||
+                  (item.to === "/inventory" &&
+                    location.pathname.startsWith("/inventory/"))) &&
+                activePath === item.to
                   ? "active"
                   : undefined
               }
