@@ -147,6 +147,14 @@ function App() {
         }
       />
       <Route
+        path="/transfers/:transferId"
+        element={
+          <ProtectedRoute>
+            <Transfers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/users"
         element={
           <ProtectedRoute allowedRoles={["ADMIN"]}>
