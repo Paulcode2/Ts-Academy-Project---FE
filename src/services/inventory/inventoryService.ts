@@ -9,6 +9,7 @@ import type {
 } from "../../types/inventory";
 
 export type InventoryListView = "all" | "low-stock" | "out-of-stock";
+export const STOCK_DATA_UPDATED_EVENT = "stock-data-updated";
 
 const MAX_PAGE_SIZE = 50;
 
