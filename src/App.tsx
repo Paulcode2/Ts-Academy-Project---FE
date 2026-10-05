@@ -12,6 +12,7 @@ import Products from "./pages/products/products";
 import Inventory from "./pages/inventory/inventory";
 import StockOperationsPage from "./pages/inventory/StockOperationsPage";
 import StockMovementsPage from "./pages/inventory/StockMovementsPage";
+import Reports from "./pages/reports/Reports";
 
 function App() {
   return (
@@ -135,6 +136,22 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports/:reportType"
+        element={
+          <ProtectedRoute>
+            <Reports />
           </ProtectedRoute>
         }
       />
