@@ -24,6 +24,9 @@ export const API_ENDPOINTS = {
     stockOut: "/stock-movements/stock-out",
     adjust: "/stock-movements/adjust",
   },
+  transfers: {
+    list: "/transfers",
+  },
   users: {
     list: "/users",
   },
