@@ -27,6 +27,9 @@ export const API_ENDPOINTS = {
   transfers: {
     list: "/transfers",
   },
+  dashboard: {
+    summary: "/dashboard/summary",
+  },
   users: {
     list: "/users",
   },
