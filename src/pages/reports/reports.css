@@ -1,30 +1,55 @@
+@import url('../dashboard/dashboard.css');
+
+/* ================= Report Tabs ================= */
 .report-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #e3e6ea;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1px;
 }
 
 .report-tabs a {
-  padding: 0.5rem 0.7rem;
-  color: #5c6470;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  color: var(--color-text-secondary);
   text-decoration: none;
-  border-radius: 5px 5px 0 0;
+  border-radius: var(--radius-sm, 5px) var(--radius-sm, 5px) 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.report-tabs a:hover {
+  background: var(--color-canvas);
+  color: var(--color-text);
 }
 
 .report-tabs a.active {
-  color: #2f6fed;
-  background: #eaf0fe;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
   font-weight: 600;
 }
 
 .report-title {
-  margin: 0 0 0.8rem;
-  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
+/* ================= Report Filters ================= */
 .report-filters {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   align-items: end;
 }
 
@@ -33,8 +58,11 @@
   flex: 1 1 10rem;
   flex-direction: column;
   gap: 0.3rem;
-  color: #5c6470;
-  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .report-filter input,
@@ -43,28 +71,127 @@
   width: 100%;
   min-height: 2.35rem;
   padding: 0.5rem 0.6rem;
-  border: 1px solid #d9dde3;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 5px);
+  background: var(--color-surface);
   font: inherit;
-  color: #303846;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  text-transform: none;
+}
+
+.report-filter input:focus,
+.report-filter select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
 .report-filters > button {
   min-height: 2.35rem;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid #2f6fed;
-  border-radius: 5px;
-  background: #2f6fed;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm, 5px);
+  background: var(--color-primary);
   color: #fff;
   cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.report-filters > button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.report-filters > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .report-note {
-  color: #5c6470;
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
+  margin: 0 0 0.75rem;
 }
 
+/* ================= Report Table ================= */
 .report-table-wrap {
   overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  background: var(--color-surface);
+}
+
+.report-table-wrap .activity-table {
+  margin: 0;
+  border-radius: var(--radius-md, 6px);
+}
+
+/* ================= Status badges for report rows ================= */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.status-completed {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.status-pending {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.status-rejected,
+.status-cancelled {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.status-approved {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+.status-in-stock {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.status-low-stock {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.status-out-of-stock {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+/* ================= Responsive ================= */
+@media (max-width: 768px) {
+  .report-tabs a {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .report-filter {
+    flex: 1 1 100%;
+  }
+
+  .report-table-wrap {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
 }

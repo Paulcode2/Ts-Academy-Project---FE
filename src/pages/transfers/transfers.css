@@ -1,12 +1,402 @@
 @import url('../dashboard/dashboard.css');
 
+/* ================= Buttons ================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 5px);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  line-height: 1.4;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn-primary {
-    background-color: #2f6fed;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-canvas);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border-color: var(--color-danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #9a1c2c;
+  border-color: #9a1c2c;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text);
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-canvas);
+}
+
+/* ================= Status Pills ================= */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.pill-ok {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.pill-warn {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.pill-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.pill-info {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+/* ================= Modal ================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal {
+  background: var(--color-surface);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-md);
+  max-width: 26rem;
+  width: 100%;
+  padding: 1.25rem;
+  animation: slideUp 0.2s ease-out;
+}
+
+.modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: var(--color-text);
+}
+
+.modal-body {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= Transfer Filters ================= */
+.transfer-filters {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.transfer-filters label,
+.transfer-filters input,
+.transfer-filters select {
+  font-size: 0.85rem;
+}
+
+.transfer-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.transfer-filters input,
+.transfer-filters select {
+  box-sizing: border-box;
+  min-height: 2.35rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 5px);
+  background: var(--color-surface);
+  font: inherit;
+  color: var(--color-text);
+}
+
+.transfer-filters input:focus,
+.transfer-filters select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.transfer-filters .btn {
+  margin-left: auto;
+}
+
+/* ================= Transfer Table ================= */
+.transfer-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  background: var(--color-surface);
+}
+
+.transfer-table-wrap .activity-table {
+  margin: 0;
+  border-radius: var(--radius-md, 6px);
+}
+
+/* ================= Transfer Creation Form ================= */
+.transfer-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.transfer-form h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--color-text);
+}
+
+.transfer-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.transfer-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 1.25rem;
+  padding-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ================= Transfer Detail ================= */
+.transfer-detail {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.transfer-detail-section {
+  margin-bottom: 1rem;
+}
+
+.transfer-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.transfer-detail-section h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.transfer-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.6rem 1rem;
+}
+
+.transfer-detail-grid dt {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.transfer-detail-grid dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+/* ================= Empty & Error States ================= */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--color-text-secondary);
+}
+
+.empty-state-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.35rem;
+}
+
+.empty-state-body {
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border: 1px solid rgba(180, 35, 50, 0.15);
+  border-radius: var(--radius-md, 6px);
+  margin-bottom: 1rem;
+}
+
+.error-state button {
+  margin-top: 0.25rem;
+}
+
+/* ================= Rejection Form (inline) ================= */
+.rejection-form {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.rejection-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.rejection-form textarea {
+  box-sizing: border-box;
+  min-height: 5rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 5px);
+  background: var(--color-surface);
+  font: inherit;
+  color: var(--color-text);
+  resize: vertical;
+}
+
+.rejection-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+/* ================= Responsive ================= */
+@media (max-width: 768px) {
+  .transfer-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .transfer-flow-arrow {
+    transform: rotate(90deg);
+    padding: 0.25rem 0;
+  }
+
+  .transfer-table-wrap {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .modal {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .transfer-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
